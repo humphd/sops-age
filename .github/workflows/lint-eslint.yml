@@ -1,12 +1,12 @@
 jobs:
-  lint_spelling:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
-      - run: pnpm lint:spelling
+      - run: pnpm lint:eslint
 
-name: Lint spelling
+name: Lint
 
 on:
   pull_request: ~
