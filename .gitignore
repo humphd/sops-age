@@ -131,3 +131,15 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Secrets files
+secret.yaml
+secrets.yaml
+secret.yml
+secrets.yaml
+secret.json
+secrets.json
+secret.ini
+secrets.ini
+secret.env
+secrets.env
