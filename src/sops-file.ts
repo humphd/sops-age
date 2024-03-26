@@ -1,5 +1,17 @@
+// TODO: sort out the various TypeScript/ESLint rules I've disabled...
+
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable eslint-comments/no-duplicate-disable */
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+import dotenv from "dotenv";
 import ini from "ini";
 import { readFile } from "node:fs/promises";
+import { extname } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
@@ -11,7 +23,7 @@ const AgeRecipientSchema = z.object({
 const SopsSchema = z
   .object({
     sops: z.object({
-      // We only care about age recipients for now
+      // We only care about age recipients
       age: z.array(AgeRecipientSchema),
       lastmodified: z.string(),
       mac: z.string().optional(),
@@ -23,62 +35,136 @@ const SopsSchema = z
 
 export type SOPS = z.infer<typeof SopsSchema>;
 
-export async function loadYamlSopsFile(path: string) {
+export async function loadSopsFile(
+  path: string,
+  sopsFileType?: "env" | "ini" | "json" | "yaml",
+) {
   const data = await readFile(path, "utf-8");
-  return parseSopsYaml(data);
+
+  // Parse the data using the given explicit type, if present.
+  if (sopsFileType) {
+    switch (sopsFileType) {
+      case "env":
+        return parseSopsEnv(data);
+      case "ini":
+        return parseSopsIni(data);
+      case "json":
+        return parseSopsJson(data);
+      case "yaml":
+        return parseSopsYaml(data);
+      default:
+        throw new Error(`Unknown SOPS file type: ${String(sopsFileType)}`);
+    }
+  }
+
+  // Otherwise, infer type from extension, if possible
+  const ext = extname(path);
+  switch (ext) {
+    case ".env":
+      return parseSopsEnv(data);
+    case ".ini":
+      return parseSopsIni(data);
+    case ".json":
+      return parseSopsJson(data);
+    case ".yaml":
+    case ".yml":
+      return parseSopsYaml(data);
+    default:
+      throw new Error(
+        `Unable to pick SOPS parser for extension ${ext}. Use: .env, .ini, .json, .yaml`,
+      );
+  }
 }
 
 export function parseSopsYaml(yamlString: string) {
   return SopsSchema.parse(parseYaml(yamlString));
 }
 
-export async function loadJsonSopsFile(path: string) {
-  const data = await readFile(path, "utf-8");
-  return parseSopsJson(JSON.parse(data));
-}
-
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export function parseSopsJson(json: any | string) {
   return SopsSchema.parse(typeof json === "string" ? JSON.parse(json) : json);
 }
 
-export async function loadIniSopsFile(path: string) {
-  const data = await readFile(path, "utf-8");
-  const parsedIni = ini.parse(data);
-  // Adapt `parsedIni` to fit the SOPS structure as needed
-  // This is a placeholder and needs to be adjusted based on the actual INI structure
-  const adaptedForSops = {
-    sops: {
-      // Example adaptation, replace with actual logic
-      age: [],
-      lastmodified: "",
-      version: "",
-      // Populate with actual data from `parsedIni`
-    },
-  };
-  return SopsSchema.parse(adaptedForSops);
+function rebuildAgeArray(
+  sops: Record<string, any>,
+): { enc: string; recipient: string }[] {
+  return Object.keys(sops)
+    .filter((key) => key.startsWith("age__list_"))
+    .reduce<{ enc: string; recipient: string }[]>((acc, key) => {
+      const match = key.match(/^age__list_(\d+)__(map_enc|map_recipient)$/);
+      if (match) {
+        const index = parseInt(match[1], 10);
+        const type = match[2];
+        // eslint-disable-next-line logical-assignment-operators
+        acc[index] = acc[index] || {};
+        acc[index][type === "map_enc" ? "enc" : "recipient"] = sops[key];
+      }
+
+      return acc;
+    }, [])
+    .map(({ enc, recipient }) => ({
+      enc: enc.replaceAll("\\n", "\n"),
+      recipient,
+    }));
 }
 
-export async function loadEnvSopsFile(path: string) {
-  const data = await readFile(path, "utf-8");
-  const lines = data.split("\n");
-  const parsedEnv = lines.reduce<Record<string, string>>((acc, line) => {
-    const [key, value] = line.split("=");
-    if (key && value) {
-      acc[key.trim()] = value.trim();
-    }
-
-    return acc;
-  }, {});
-  // Adapt `parsedEnv` to fit the SOPS structure as needed
-  // This is a placeholder and needs to be adjusted based on the actual .env structure
-  const adaptedForSops = {
+function constructSopsObject(
+  base: Record<string, any>,
+  sops: Record<string, any>,
+) {
+  return SopsSchema.parse({
+    ...base,
     sops: {
-      // Example adaptation, replace with actual logic
-      age: [],
-      lastmodified: "",
-      version: "",
-      // Populate with actual data from `parsedEnv`
+      age: rebuildAgeArray(sops),
+      lastmodified: sops.lastmodified,
+      mac: sops.mac,
+      unencrypted_suffix: sops.unencrypted_suffix,
+      version: sops.version,
     },
-  };
-  return SopsSchema.parse(adaptedForSops);
+  });
+}
+
+export function parseSopsIni(iniString: string) {
+  const parsedIni = ini.parse(iniString);
+  const { sops } = parsedIni;
+  if (!sops) {
+    throw new Error("Missing sops section in .ini");
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return constructSopsObject(parsedIni, sops);
+}
+
+export function parseSopsEnv(envString: string) {
+  const parsedEnv = dotenv.parse(envString);
+  const sopsKeys = Object.keys(parsedEnv).filter((key) =>
+    key.startsWith("sops_"),
+  );
+
+  if (sopsKeys.length === 0) {
+    throw new Error("Missing sops data in .env");
+  }
+
+  // Initialize an object to hold the sops data
+  const sops: any = {};
+  sopsKeys.forEach((key) => {
+    // Remove 'sops_' prefix
+    const newKey = key.replace(/^sops_/, "");
+    sops[newKey] = parsedEnv[key];
+  });
+
+  // Exclude sopsKeys from parsedEnv to create a new object for non-sops pairs
+  const nonSopsEnv = Object.keys(parsedEnv).reduce<Record<string, string>>(
+    (acc, key) => {
+      if (!sopsKeys.includes(key)) {
+        acc[key] = parsedEnv[key];
+      }
+
+      return acc;
+    },
+    {},
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return constructSopsObject(nonSopsEnv, sops);
 }

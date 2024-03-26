@@ -1,4 +1,4 @@
-# Test Age key
+# Age Key - used only for tests
 # created: 2024-03-24T21:11:43-04:00
 # public key: age1je6kjhzuhdjy3fqptpttxjh5k8q46vygzlgtpuq3030c947pc5tqz9dqvr
 AGE-SECRET-KEY-1QXRVEJH9S4NQU0FPD6V79ESZQ8S6PXH3L8V40EVPTHFH6KNKD4DQ7SKC4P

@@ -12,13 +12,16 @@ module.exports = {
     "plugin:regexp/recommended",
     "plugin:vitest/recommended",
   ],
-  ignorePatterns: ["!.*", "coverage", "dist", "node_modules", "pnpm-lock.yaml"],
+  ignorePatterns: [
+    "!.*",
+    "coverage",
+    "dist",
+    "node_modules",
+    "pnpm-lock.yaml",
+    ".sops.yaml",
+    "src/data/*.*",
+  ],
   overrides: [
-    {
-      extends: ["plugin:markdown/recommended-legacy"],
-      files: ["**/*.md"],
-      processor: "markdown/markdown",
-    },
     {
       extends: [
         "plugin:@typescript-eslint/strict",

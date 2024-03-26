@@ -1,36 +1,21 @@
-import age from "age-encryption";
+// TODO: sort out the various TypeScript/ESLint rules I've disabled...
+
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable eslint-comments/no-duplicate-disable */
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { createDecipheriv } from "crypto";
+import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
 
 import type { SOPS } from "./sops-file.js";
 
-export async function getPublicAgeKey(privateAgeKey: string) {
-  const { identityToRecipient } = await age();
-  return identityToRecipient(privateAgeKey);
-}
-
-async function decryptAgeEncryptionKey(
-  encryptedKey: string,
-  secretKey: string,
-) {
-  const { Decrypter } = await age();
-
-  const decrypter = new Decrypter();
-  decrypter.addIdentity(secretKey);
-
-  const regex =
-    /-----BEGIN AGE ENCRYPTED FILE-----\s*([\s\S]*?)\s*-----END AGE ENCRYPTED FILE-----/;
-  const matches = encryptedKey.match(regex);
-  if (!matches?.[1]) {
-    throw new Error("unable to extract age encryption key");
-  }
-
-  const base64String = matches[1].trim();
-  const encrypted = Buffer.from(base64String, "base64");
-  const decryptionKey = decrypter.decrypt(encrypted, "uint8array");
-
-  return Buffer.from(decryptionKey);
-}
+import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 
 export async function getSopsEncryptionKeyForRecipient(
   sops: SOPS,
@@ -48,7 +33,7 @@ export async function getSopsEncryptionKeyForRecipient(
 
 function decryptValue(
   value: string,
-  key: Buffer,
+  decryptionKey: Buffer,
   aad = "",
 ): Buffer | boolean | number | string {
   const match = value.match(
@@ -58,7 +43,7 @@ function decryptValue(
     return value;
   }
 
-  const [, encValue, ivBase64, tagBase64, valtype] = match;
+  const [, encValue, ivBase64, tagBase64, dataType] = match;
   if (!encValue || !ivBase64 || !tagBase64) {
     throw new Error("Invalid ENC format");
   }
@@ -66,13 +51,12 @@ function decryptValue(
   const iv = Buffer.from(ivBase64, "base64");
   const tag = Buffer.from(tagBase64, "base64");
 
-  const decryptor = createDecipheriv("aes-256-gcm", key, iv);
-  decryptor.setAuthTag(tag);
-  decryptor.setAAD(Buffer.from(aad));
+  const decipher = createDecipheriv("aes-256-gcm", decryptionKey, iv);
+  decipher.setAuthTag(tag);
+  decipher.setAAD(Buffer.from(aad));
+  const decrypted = decipher.update(encValue, "base64", "utf8");
 
-  const decrypted = decryptor.update(encValue, "base64", "utf8");
-
-  switch (valtype) {
+  switch (dataType) {
     case "bytes":
       return Buffer.from(decrypted, "utf8");
     case "str":
@@ -82,23 +66,51 @@ function decryptValue(
     case "float":
       return parseFloat(decrypted);
     case "bool":
-      return decrypted === "true";
+      return decrypted === "True";
     default:
-      throw new Error(`Unknown type ${valtype}`);
+      throw new Error(`Unknown type ${dataType}`);
   }
 }
 
-// secretKey is an age X25519 identity
-export async function decrypt(sops: SOPS, secretKey: string, keyPath: string) {
-  const decryptionKey = await getSopsEncryptionKeyForRecipient(sops, secretKey);
-  const value = get(sops, keyPath);
-  if (typeof value !== "string") {
-    throw new Error(`Unable to get sops value at ${keyPath}`);
+function decryptObject(obj: any, decryptionKey: Buffer) {
+  if (typeof obj !== "object" || obj === null) {
+    return obj;
   }
 
-  const decrypted = decryptValue(value, decryptionKey);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  for (const key of Object.keys(obj)) {
+    const value = obj[key];
+    if (typeof value === "string" && value.startsWith("ENC[AES256_GCM,data:")) {
+      obj[key] = decryptValue(value, decryptionKey);
+    } else if (typeof value === "object") {
+      // Recursively decrypt objects and arrays
+      obj[key] = decryptObject(value, decryptionKey);
+    }
+  }
+
+  return obj;
+}
+
+export async function decrypt(sops: SOPS, secretKey: string, keyPath?: string) {
+  const decryptionKey = await getSopsEncryptionKeyForRecipient(sops, secretKey);
+
+  // If we have a path to a specific key, only decrypt that
+  if (keyPath) {
+    const value = get(sops, keyPath);
+    if (typeof value !== "string") {
+      throw new Error(`Unable to get sops value at ${keyPath}`);
+    }
+
+    return decryptValue(value, decryptionKey);
+  }
+
+  // Otherwise, decrypt the whole thing, stripping out the sops metadata
+  // and only use the rest of the keys
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { sops: _, ...data } = sops;
+  // Deep clone the object so we can decrypt in-place:
+  const cloned = cloneDeep(data);
+  return decryptObject(cloned, decryptionKey);
 
   // TODO: calculate checksum and confirm...
-
-  return decrypted;
 }
