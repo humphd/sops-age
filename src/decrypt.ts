@@ -63,7 +63,7 @@ function decryptValue(
     case "float":
       return parseFloat(decrypted);
     case "bool":
-      return decrypted === "True";
+      return decrypted.toLowerCase() === "true";
     default:
       throw new Error(`Unknown type ${dataType}`);
   }
@@ -107,7 +107,22 @@ export async function decrypt(sops: SOPS, secretKey: string, keyPath?: string) {
   const { sops: _, ...data } = sops;
   // Deep clone the object so we can decrypt in-place:
   const cloned = cloneDeep(data);
-  return decryptObject(cloned, decryptionKey);
+  const decryptedData = decryptObject(cloned, decryptionKey);
 
-  // TODO: calculate checksum and confirm...
+  if (sops.sops.mac && sops.sops.lastmodified) {
+    // TODO: decrypt mac and compare to hash of all values.
+    //
+    // Message Authentication Code - https://github.com/getsops/sops/?tab=readme-ov-file#message-authentication-code
+    //
+    // In addition to authenticating branches of the tree using keys
+    // as additional data, SOPS computes a MAC on all the values to
+    // ensure that no value has been added or removed fraudulently.
+    // The MAC is stored encrypted with AES_GCM and the data key
+    // under tree -> sops -> mac. This behavior can be modified
+    // using --mac-only-encrypted flag or .sops.yaml config file
+    // which makes SOPS compute a MAC only over values it encrypted
+    // and not all values.
+  }
+
+  return decryptedData;
 }
