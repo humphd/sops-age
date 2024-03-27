@@ -17,10 +17,7 @@ import type { SOPS } from "./sops-file.js";
 
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 
-export async function getSopsEncryptionKeyForRecipient(
-  sops: SOPS,
-  secretKey: string,
-) {
+async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
   const pubKey = await getPublicAgeKey(secretKey);
 
   const recipient = sops.sops.age.find((config) => config.recipient === pubKey);
