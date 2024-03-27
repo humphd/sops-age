@@ -14,6 +14,7 @@ jobs:
       - if: steps.check.outputs.is-new-version == 'true'
         name: Publish if newer
         run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           pnpm build
           pnpm publish --no-git-checks --access public
         shell: bash
