@@ -1,6 +1,6 @@
 {
   "name": "sops-age",
-  "version": "0.0.0",
+  "version": "0.6.0",
   "description": "Node.js sops age decryption",
   "repository": "humphd/sops-age",
   "license": "MIT",
@@ -51,8 +51,8 @@
     "@types/ini": "^4.1.0",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.11.30",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "@vitest/coverage-v8": "^1.4.0",
     "console-fail-test": "^0.2.3",
     "eslint": "^8.57.0",
@@ -60,14 +60,13 @@
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-jsonc": "^2.14.1",
     "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-package-json": "^0.11.0",
     "eslint-plugin-perfectionist": "^2.7.0",
     "eslint-plugin-regexp": "^2.4.0",
-    "eslint-plugin-vitest": "^0.3.26",
+    "eslint-plugin-vitest": "^0.4.0",
     "eslint-plugin-yml": "^1.13.2",
     "husky": "^9.0.11",
     "jsonc-eslint-parser": "^2.4.0",
-    "knip": "^5.4.0",
+    "knip": "^5.6.0",
     "lint-staged": "^15.2.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.2.5",
@@ -82,8 +81,5 @@
   "packageManager": "pnpm@8.15.1",
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "provenance": true
   }
 }
