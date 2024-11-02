@@ -24,15 +24,15 @@
   ],
   "scripts": {
     "build": "unbuild",
-    "format": "prettier . --write",
-    "format-check": "prettier . --check",
+    "format": "prettier . --write --cache",
+    "format-check": "prettier . --check --cache",
     "lint": "pnpm run-s lint:*",
     "lint:eslint": "eslint . .*js --max-warnings 0",
     "lint:knip": "knip",
     "lint:packages": "pnpm dedupe --check",
-    "prepare": "husky install",
     "test": "vitest",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "prepare": "husky"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write"
