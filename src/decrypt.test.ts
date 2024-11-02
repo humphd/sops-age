@@ -12,6 +12,9 @@ const AGE_SECRET_KEY =
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const sopsFile = () =>
+  loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
+
 describe("loadSopsFile() with explicit type", () => {
   test("json", () => {
     expect(() =>
@@ -38,13 +41,38 @@ describe("loadSopsFile() with explicit type", () => {
   });
 });
 
-describe("JSON File", () => {
-  const sopsFile = () =>
-    loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
+describe("secretKey from env or options", () => {
+  test("decrypt using secretKey from env", async () => {
+    const sops = await sopsFile();
+    const value = await decrypt(sops, {
+      keyPath: "boolean",
+    });
+    expect(value).toBe(true);
+  });
 
+  test("decrypt using secretKey from options", async () => {
+    const sops = await sopsFile();
+    const value = await decrypt(sops, {
+      keyPath: "boolean",
+      secretKey: AGE_SECRET_KEY,
+    });
+    expect(value).toBe(true);
+  });
+
+  test("decrypt without secretKey throws", async () => {
+    const sops = await sopsFile();
+    // Clear the key from the env before decrypting (see vitest.config.ts for `env`)
+    process.env.SOPS_AGE_KEY = "";
+    await expect(() =>
+      decrypt(sops, { secretKey: undefined }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("JSON File", () => {
   test("decrypt all values from SOPS JSON file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY);
+    const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
     expect(value).toEqual({
       boolean: true,
       complex: {
@@ -60,25 +88,37 @@ describe("JSON File", () => {
 
   test("decrypt a specific string value from SOPS JSON file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "complex.value");
+    const value = await decrypt(sops, {
+      keyPath: "complex.value",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toEqual("this is a secret");
   });
 
   test("decrypt an int value from SOPS JSON file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "int");
+    const value = await decrypt(sops, {
+      keyPath: "int",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toBe(7);
   });
 
   test("decrypt a float value from SOPS JSON file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "float");
+    const value = await decrypt(sops, {
+      keyPath: "float",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toBe(3.14);
   });
 
   test("decrypt a bool value from SOPS JSON file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "boolean");
+    const value = await decrypt(sops, {
+      keyPath: "boolean",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toBe(true);
   });
 });
@@ -89,7 +129,7 @@ describe("YAML File", () => {
 
   test("decrypt all values from SOPS YAML file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY);
+    const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
     expect(value).toEqual({
       boolean: true,
       complex: {
@@ -105,25 +145,37 @@ describe("YAML File", () => {
 
   test("decrypt a specific string value from SOPS YAML file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "complex.value");
+    const value = await decrypt(sops, {
+      keyPath: "complex.value",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toEqual("this is a secret");
   });
 
   test("decrypt an int value from SOPS YAML file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "int");
+    const value = await decrypt(sops, {
+      keyPath: "int",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toBe(7);
   });
 
   test("decrypt a float value from SOPS YAML file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "float");
+    const value = await decrypt(sops, {
+      keyPath: "float",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toBe(3.14);
   });
 
   test("decrypt a bool value from SOPS YAML file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "boolean");
+    const value = await decrypt(sops, {
+      keyPath: "boolean",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toBe(true);
   });
 });
@@ -134,7 +186,7 @@ describe("INI File", () => {
 
   test("decrypt all values from SOPS INI file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY);
+    const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
     expect(value).toEqual({
       complex: {
         string: "string",
@@ -145,7 +197,10 @@ describe("INI File", () => {
 
   test("decrypt a specific string value from SOPS INI file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "complex.string");
+    const value = await decrypt(sops, {
+      keyPath: "complex.string",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toEqual("string");
   });
 });
@@ -156,7 +211,7 @@ describe("ENV File", () => {
 
   test("decrypt all values from SOPS ENV file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY);
+    const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
     expect(value).toEqual({
       another_secret: "7",
       secret: "this is a secret",
@@ -165,7 +220,10 @@ describe("ENV File", () => {
 
   test("decrypt a specific string value from SOPS ENV file", async () => {
     const sops = await sopsFile();
-    const value = await decrypt(sops, AGE_SECRET_KEY, "another_secret");
+    const value = await decrypt(sops, {
+      keyPath: "another_secret",
+      secretKey: AGE_SECRET_KEY,
+    });
     expect(value).toEqual("7");
   });
 });

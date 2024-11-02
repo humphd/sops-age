@@ -1,6 +1,6 @@
 {
   "name": "sops-age",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": "Node.js sops age decryption",
   "repository": "humphd/sops-age",
   "license": "MIT",
@@ -24,15 +24,15 @@
   ],
   "scripts": {
     "build": "unbuild",
-    "format": "prettier . --write",
-    "format-check": "prettier . --check",
+    "format": "prettier . --write --cache",
+    "format-check": "prettier . --check --cache",
     "lint": "pnpm run-s lint:*",
     "lint:eslint": "eslint . .*js --max-warnings 0",
     "lint:knip": "knip",
     "lint:packages": "pnpm dedupe --check",
-    "prepare": "husky install",
     "test": "vitest",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "prepare": "husky"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write"
@@ -78,7 +78,7 @@
     "vitest": "^1.4.0",
     "yaml-eslint-parser": "^1.2.2"
   },
-  "packageManager": "pnpm@8.15.1",
+  "packageManager": "pnpm@9",
   "engines": {
     "node": ">=18"
   }
