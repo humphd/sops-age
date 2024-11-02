@@ -88,14 +88,30 @@ function decryptObject(obj: any, decryptionKey: Buffer) {
   return obj;
 }
 
-export async function decrypt(sops: SOPS, secretKey: string, keyPath?: string) {
+export interface DecryptOptions {
+  // A path to a specific key in the SOPS file to decrypt
+  keyPath?: string;
+  // The secret key (e.g., AGE key) to use when decrypting. If not specified the
+  // `SOPS_AGE_KEY` env var will be used, if available.
+  secretKey?: string;
+}
+
+export async function decrypt(sops: SOPS, options: DecryptOptions) {
+  const keyPath = options.keyPath;
+  const secretKey = options.secretKey ?? process.env.SOPS_AGE_KEY;
+  if (!secretKey) {
+    throw new Error(
+      "A secretKey is required to decrypt. Set one on options or via the SOPS_AGE_KEY environment variable",
+    );
+  }
+
   const decryptionKey = await getSopsEncryptionKeyForRecipient(sops, secretKey);
 
   // If we have a path to a specific key, only decrypt that
   if (keyPath) {
     const value = get(sops, keyPath);
     if (typeof value !== "string") {
-      throw new Error(`Unable to get sops value at ${keyPath}`);
+      throw new Error(`Unable to get sops value at keyPath="${keyPath}"`);
     }
 
     return decryptValue(value, decryptionKey);

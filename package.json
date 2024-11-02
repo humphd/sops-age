@@ -1,6 +1,6 @@
 {
   "name": "sops-age",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": "Node.js sops age decryption",
   "repository": "humphd/sops-age",
   "license": "MIT",
@@ -78,7 +78,6 @@
     "vitest": "^1.4.0",
     "yaml-eslint-parser": "^1.2.2"
   },
-  "packageManager": "pnpm@8.15.1",
   "engines": {
     "node": ">=18"
   }

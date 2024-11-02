@@ -32,7 +32,7 @@ async function decryptSopsFile(filePath, secretKey) {
     const sopsData = await loadSopsFile(filePath);
 
     // Decrypt the data using the secret key
-    const decryptedData = await decrypt(sopsData, secretKey);
+    const decryptedData = await decrypt(sopsData, { secretKey });
 
     console.log("Decrypted Data:", decryptedData);
   } catch (error) {
@@ -62,15 +62,17 @@ The library automatically detects the file type based on the file extension. You
 
 Loads a SOPS file from the specified path. The `sopsFileType` parameter is optional and can be used to manually specify the file type (`env`, `ini`, `json`, `yaml`) when it can't be inferred from the file extension.
 
-### `decrypt(sops, secretKey, [keyPath])`
+### `decrypt(sops, { secretKey: "AGE-key...", [keyPath] })`
 
-Decrypts the data from a loaded SOPS object using the provided secret key. If `keyPath` is specified, only the value at the given path is decrypted and returned; otherwise, all decrypted data is returned.
+Decrypts the data from a loaded SOPS object using the provided secret key. If no `secretKey` is provided in the `options`, the `SOPS_AGE_KEY` will be used instead.
+
+If `keyPath` is specified, only the value at the given path is decrypted and returned; otherwise, all decrypted data is returned.
 
 ```js
 const sopsData = await loadSopsFile(filePath);
 
 // Decrypt only the DB_URI value secret key
-const DB_URI = await decrypt(sopsData, secretKey, "DB_URI");
+const DB_URI = await decrypt(sopsData, { secretKey, keyPath: "DB_URI" });
 ```
 
 ### Parsing Functions
@@ -86,7 +88,7 @@ These functions parse the strings of the specified type into a SOPS object that 
 // Assuming `env` contains a string in the form on an ENV file
 const sopsData = parseSopsEnv(env);
 
-const decryptedEnv = await decrypt(sopsData, secretKey);
+const decryptedEnv = await decrypt(sopsData, { secretKey });
 ```
 
 ## License
