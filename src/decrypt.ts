@@ -8,7 +8,7 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
+import { gcm } from '@noble/ciphers/aes';
 import { createDecipheriv } from "crypto";
 import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
@@ -55,9 +55,13 @@ function decryptValue(
   );
   decipher.setAuthTag(tag);
   decipher.setAAD(Uint8Array.from(Buffer.from(aad)));
-  console.log("encValue", encValue);
-  const decrypted = decipher.update(encValue, "base64", "utf8");
+  // convert encValue to Uint8Array
+  const uint8_encValue = Uint8Array.from(Buffer.from(encValue, "base64"));
 
+  const aes = gcm(Uint8Array.from(decryptionKey), Uint8Array.from(iv));
+  const data_ = aes.decrypt(uint8_encValue);
+  const decrypted = decipher.update(encValue, "base64", "utf8");
+  console.log(decrypted, data_);
   switch (dataType) {
     case "bytes":
       return Buffer.from(decrypted, "utf8");
