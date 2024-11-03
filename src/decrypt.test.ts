@@ -2,8 +2,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
+import test_json_import from "./data/secret.enc.json" with { type: "json" };
 import { decrypt } from "./decrypt.js";
-import { loadSopsFile } from "./sops-file.js";
+import { loadSopsFile, parseSopsJson } from "./sops-file.js";
 
 // See ../../key.txt
 const AGE_SECRET_KEY =
@@ -11,6 +12,17 @@ const AGE_SECRET_KEY =
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const EXPECTED_DECRYPTED_SECRET_JSON = {
+  boolean: true,
+  complex: {
+    array: ["one", "two", "three"],
+    value: "this is a secret",
+  },
+  float: 3.14,
+  int: 7,
+  secret: "this is a secret",
+  string: "string",
+};
 
 const sopsFile = () =>
   loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
@@ -73,17 +85,14 @@ describe("JSON File", () => {
   test("decrypt all values from SOPS JSON file", async () => {
     const sops = await sopsFile();
     const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
-    expect(value).toEqual({
-      boolean: true,
-      complex: {
-        array: ["one", "two", "three"],
-        value: "this is a secret",
-      },
-      float: 3.14,
-      int: 7,
-      secret: "this is a secret",
-      string: "string",
+    expect(value).toEqual(EXPECTED_DECRYPTED_SECRET_JSON);
+  });
+
+  test("decrypt import", async () => {
+    const value = await decrypt(parseSopsJson(test_json_import), {
+      secretKey: AGE_SECRET_KEY,
     });
+    expect(value).toEqual(EXPECTED_DECRYPTED_SECRET_JSON);
   });
 
   test("decrypt a specific string value from SOPS JSON file", async () => {
