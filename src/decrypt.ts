@@ -8,7 +8,7 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
+import { gcm } from "@noble/ciphers/aes";
 import { createDecipheriv } from "crypto";
 import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
@@ -48,11 +48,33 @@ function decryptValue(
   const iv = Buffer.from(ivBase64, "base64");
   const tag = Buffer.from(tagBase64, "base64");
 
-  const decipher = createDecipheriv("aes-256-gcm", decryptionKey, iv);
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    Uint8Array.from(decryptionKey),
+    Uint8Array.from(iv),
+  );
   decipher.setAuthTag(tag);
-  decipher.setAAD(Buffer.from(aad));
+  decipher.setAAD(Uint8Array.from(Buffer.from(aad)));
+  // convert encValue to Uint8Array
+  const uint8_encValue = Uint8Array.from(Buffer.from(encValue, "base64"));
+
   const decrypted = decipher.update(encValue, "base64", "utf8");
 
+  const combinedData = new Uint8Array(uint8_encValue.length + tag.length);
+  combinedData.set(uint8_encValue);
+  combinedData.set(tag, uint8_encValue.length);
+
+  console.log({
+    combinedLength: combinedData.length,
+    encValueLength: uint8_encValue.length,
+    ivBase64,
+    ivLength: iv.length,
+    keyLength: decryptionKey.length,
+    tagLength: tag.length,
+  });
+  const aes = gcm(Uint8Array.from(decryptionKey), Uint8Array.from(iv));
+  const data_ = aes.decrypt(uint8_encValue);
+  console.log(decrypted, data_);
   switch (dataType) {
     case "bytes":
       return Buffer.from(decrypted, "utf8");
