@@ -48,9 +48,14 @@ function decryptValue(
   const iv = Buffer.from(ivBase64, "base64");
   const tag = Buffer.from(tagBase64, "base64");
 
-  const decipher = createDecipheriv("aes-256-gcm", decryptionKey, iv);
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    Uint8Array.from(decryptionKey),
+    Uint8Array.from(iv),
+  );
   decipher.setAuthTag(tag);
-  decipher.setAAD(Buffer.from(aad));
+  decipher.setAAD(Uint8Array.from(Buffer.from(aad)));
+  console.log("encValue", encValue);
   const decrypted = decipher.update(encValue, "base64", "utf8");
 
   switch (dataType) {
