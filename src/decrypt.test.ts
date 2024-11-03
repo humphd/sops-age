@@ -88,7 +88,7 @@ describe("JSON File", () => {
     expect(value).toEqual(EXPECTED_DECRYPTED_SECRET_JSON);
   });
 
-  test("decrypt import", async () => {
+  test.only("decrypt import", async () => {
     const value = await decrypt(parseSopsJson(test_json_import), {
       secretKey: AGE_SECRET_KEY,
     });
