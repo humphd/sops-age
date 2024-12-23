@@ -4,13 +4,15 @@ const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
 const NONCE_SIZE = 32;
 
 function isEmpty(v) {
-  if (v === null || v === undefined) return true;
+  if (v === null || v === undefined) {
+    return true;
+  }
   switch (typeof v) {
-    case 'string':
-      return v === '';
-    case 'number':
+    case "string":
+      return v === "";
+    case "number":
       return v === 0;
-    case 'boolean':
+    case "boolean":
       return false;
     default:
       return false;
@@ -23,6 +25,7 @@ function base64ToUint8Array(base64) {
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
+
   return bytes;
 }
 
@@ -40,55 +43,111 @@ function uint8ArrayToString(uint8Array) {
 }
 
 class Cipher {
+  async decrypt(ciphertext, key, additionalData) {
+    if (isEmpty(ciphertext)) {
+      return "";
+    }
+
+    const encryptedValue = this.parse(ciphertext);
+
+    // Combine data and tag for decryption
+    const combined = new Uint8Array(
+      encryptedValue.data.length + encryptedValue.tag.length,
+    );
+    combined.set(encryptedValue.data);
+    combined.set(encryptedValue.tag, encryptedValue.data.length);
+
+    const algorithm = {
+      additionalData: stringToUint8Array(additionalData),
+      iv: encryptedValue.iv,
+      name: "AES-GCM",
+      tagLength: 128,
+    };
+
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      key,
+      "AES-GCM",
+      false,
+      ["decrypt"],
+    );
+
+    const decrypted = await crypto.subtle.decrypt(
+      algorithm,
+      cryptoKey,
+      combined,
+    );
+
+    const decryptedValue = uint8ArrayToString(new Uint8Array(decrypted));
+
+    switch (encryptedValue.datatype) {
+      case "str":
+        return decryptedValue;
+      case "int":
+        return parseInt(decryptedValue, 10);
+      case "float":
+        return parseFloat(decryptedValue);
+      case "bytes":
+        return new Uint8Array(decrypted);
+      case "bool":
+        return decryptedValue.toLowerCase() === "true";
+      default:
+        throw new Error(`Unknown datatype: ${encryptedValue.datatype}`);
+    }
+  }
+
   async encrypt(plaintext, key, iv, additionalData) {
     if (isEmpty(plaintext)) {
-      return '';
+      return "";
     }
 
     let plainBytes;
     let encryptedType;
 
     switch (typeof plaintext) {
-      case 'string':
-        encryptedType = 'str';
+      case "string":
+        encryptedType = "str";
         plainBytes = stringToUint8Array(plaintext);
         break;
-      case 'number':
+      case "number":
         if (Number.isInteger(plaintext)) {
-          encryptedType = 'int';
+          encryptedType = "int";
           plainBytes = stringToUint8Array(plaintext.toString());
         } else {
-          encryptedType = 'float';
+          encryptedType = "float";
           plainBytes = stringToUint8Array(plaintext.toString());
         }
+
         break;
-      case 'boolean':
-        encryptedType = 'bool';
-        plainBytes = stringToUint8Array(plaintext ? 'True' : 'False');
+      case "boolean":
+        encryptedType = "bool";
+        plainBytes = stringToUint8Array(plaintext ? "True" : "False");
         break;
       default:
-        throw new Error(`Value to encrypt has unsupported type ${typeof plaintext}`);
+        throw new Error(
+          `Value to encrypt has unsupported type ${typeof plaintext}`,
+        );
     }
 
     const algorithm = {
-      name: 'AES-GCM',
-      iv: iv,
       additionalData: stringToUint8Array(additionalData),
-      tagLength: 128
+      iv,
+      name: "AES-GCM",
+      tagLength: 128,
     };
 
     const cryptoKey = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       key,
-      'AES-GCM',
+      "AES-GCM",
       false,
-      ['encrypt']
+      ["encrypt"],
     );
 
     const encrypted = await crypto.subtle.encrypt(
       algorithm,
       cryptoKey,
-      plainBytes
+      plainBytes,
     );
 
     // Split the result into ciphertext and tag
@@ -111,60 +170,9 @@ class Cipher {
       const tag = base64ToUint8Array(matches[3]);
       const datatype = matches[4];
 
-      return { data, iv, tag, datatype };
+      return { data, datatype, iv, tag };
     } catch (err) {
       throw new Error(`Error decoding base64: ${err.message}`);
-    }
-  }
-
-  async decrypt(ciphertext, key, additionalData) {
-    if (isEmpty(ciphertext)) {
-      return '';
-    }
-
-    const encryptedValue = this.parse(ciphertext);
-
-    // Combine data and tag for decryption
-    const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
-    combined.set(encryptedValue.data);
-    combined.set(encryptedValue.tag, encryptedValue.data.length);
-
-    const algorithm = {
-      name: 'AES-GCM',
-      iv: encryptedValue.iv,
-      additionalData: stringToUint8Array(additionalData),
-      tagLength: 128
-    };
-
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      key,
-      'AES-GCM',
-      false,
-      ['decrypt']
-    );
-
-    const decrypted = await crypto.subtle.decrypt(
-      algorithm,
-      cryptoKey,
-      combined
-    );
-
-    const decryptedValue = uint8ArrayToString(new Uint8Array(decrypted));
-
-    switch (encryptedValue.datatype) {
-      case 'str':
-        return decryptedValue;
-      case 'int':
-        return parseInt(decryptedValue, 10);
-      case 'float':
-        return parseFloat(decryptedValue);
-      case 'bytes':
-        return new Uint8Array(decrypted);
-      case 'bool':
-        return decryptedValue.toLowerCase() === 'true';
-      default:
-        throw new Error(`Unknown datatype: ${encryptedValue.datatype}`);
     }
   }
 }
@@ -172,22 +180,27 @@ class Cipher {
 // Example usage
 async function main() {
   const cipher = new Cipher();
-  
+
   // Fixed 32-byte key (AES-256)
   const key = new Uint8Array([
-    0x79, 0x82, 0xc4, 0x88, 0xb1, 0x50, 0x9e, 0x98, 0xd8, 0x92, 0xc5, 0x93, 0x88,
-    0xaa, 0x70, 0xbf, 0x6b, 0x0a, 0x87, 0x0f, 0x96, 0x25, 0xbe, 0x45, 0xa3, 0xf6,
-    0x98, 0xd9, 0x8a, 0x97, 0xb3, 0x07,
+    0x79, 0x82, 0xc4, 0x88, 0xb1, 0x50, 0x9e, 0x98, 0xd8, 0x92, 0xc5, 0x93,
+    0x88, 0xaa, 0x70, 0xbf, 0x6b, 0x0a, 0x87, 0x0f, 0x96, 0x25, 0xbe, 0x45,
+    0xa3, 0xf6, 0x98, 0xd9, 0x8a, 0x97, 0xb3, 0x07,
   ]);
 
-  // Fixed 32-byte IV/nonce  
+  // Fixed 32-byte IV/nonce
   const iv = new TextEncoder().encode("12345678901234567890123456789012");
-  
+
   try {
-    const encrypted = await cipher.encrypt("Hello, World!", key, iv, "some-auth-data");
+    // const encrypted = await cipher.encrypt("Hello, World!", key, iv, "some-auth-data");
+    const encrypted =
+      "ENC[AES256_GCM,data:s0/KBsFec29XLrGbAnLiNA==," +
+      "iv:k5oP3kb8tTbZaL3PxbFWN8ToOb8vfv2b1EuPz1LbmYU=," +
+      "tag:n1RlTSRKGgoB909D4I3n+A==,type:str]";
     console.log("Encrypted:", encrypted);
-    
-    const decrypted = await cipher.decrypt(encrypted, key, "some-auth-data");
+
+    const decrypted = await cipher.decrypt(encrypted, key, "secret:");
+
     console.log("Decrypted:", decrypted);
   } catch (err) {
     console.error("Error:", err);
