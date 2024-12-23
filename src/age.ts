@@ -24,6 +24,6 @@ export async function decryptAgeEncryptionKey(
   const base64String = matches[1].trim();
   const encrypted = Buffer.from(base64String, "base64");
   const decryptionKey = decrypter.decrypt(encrypted, "uint8array");
-
+  console.log(decryptionKey);
   return Buffer.from(decryptionKey);
 }

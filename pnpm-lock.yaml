@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@noble/ciphers':
+        specifier: ^1.1.3
+        version: 1.1.3
+      '@scure/base':
+        specifier: ^1.2.1
+        version: 1.2.1
       age-encryption:
         specifier: ^0.1.5
         version: 0.1.5
@@ -20,6 +26,9 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      noble:
+        specifier: ^1.9.1
+        version: 1.9.1
       yaml:
         specifier: ^2.4.1
         version: 2.4.1
@@ -577,6 +586,10 @@ packages:
     resolution: {integrity: sha512-/gKJun8NNiWGZJkGzI/Ragc53cOdcLNdzjLaIa+GEjguQs0ulsurx8WN0jijdK9yPqDvziX995sMRLyLt1uZMQ==}
     engines: {node: '>= 0.4'}
 
+  '@noble/ciphers@1.1.3':
+    resolution: {integrity: sha512-Ygv6WnWJHLLiW4fnNDC1z+i13bud+enXOFRBlpxI+NJliPWx5wdR+oWlTjLuBPTqjUjtHXtjkU6w3kuuH6upZA==}
+    engines: {node: ^14.21.3 || >=16}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -872,6 +885,9 @@ packages:
     resolution: {integrity: sha512-UKXUQNbO3DOhzLRwHSpa0HnhhCgNODvfoPWv2FCXme8N/ANFfhIPMGuOT+QuKd16+B5yxZ0HdpNlqPvTMS1qfw==}
     cpu: [x64]
     os: [win32]
+
+  '@scure/base@1.2.1':
+    resolution: {integrity: sha512-DGmGtC8Tt63J5GfHgfl5CuAXh96VF/LD8K9Hr/Gv0J2lAoRGlPOMpqMpMbCTOoOJMZCk2Xt+DskdDyn6dEFdzQ==}
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -1199,6 +1215,10 @@ packages:
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
+  bluetooth-hci-socket@0.5.1:
+    resolution: {integrity: sha512-5/cPO2R+X4UXLudZOevREf3kwyCNCVovA9rcXk5smBgx+q/sIucfkC6F57+xWR5X17bY931w6bB2EUaPh9ArfQ==}
+    os: [linux, android, win32]
+
   bole@5.0.11:
     resolution: {integrity: sha512-KB0Ye0iMAW5BnNbnLfMSQcnI186hKUzE2fpkZWqcxsoTR7eqzlTidSOMYPHJOn/yR7VGH7uSZp37qH9q2Et0zQ==}
 
@@ -1208,6 +1228,9 @@ packages:
   boxen@7.1.1:
     resolution: {integrity: sha512-2hCgjEmP8YLWQ130n2FerGv7rYpfBmnmp9Uy2Le1vge6X3gZIfSmEzP5QTDElFxcvVcXlEn8Aq6MU/PZygIOog==}
     engines: {node: '>=14.16'}
+
+  bplist-parser@0.0.6:
+    resolution: {integrity: sha512-fGeghPEH4Eytvf+Mi446aKcDqvkA/+eh6r7QGiZWMQG6TzqrnsToLP379XFfqRSZ41+676hhGIm++maNST1Apw==}
 
   brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -1567,6 +1590,14 @@ packages:
   data-view-byte-offset@1.0.0:
     resolution: {integrity: sha512-t/Ygsytq+R995EJ5PZlD4Cu56sWa8InXySaViRzw9apusqsOO2bQP+SbYzAhR0pFKoB+43lYy8rWban9JSuXnA==}
     engines: {node: '>= 0.4'}
+
+  debug@2.2.0:
+    resolution: {integrity: sha512-X0rGvJcskG1c3TgSCPqHJ0XJgwlcvOC7elJ5Y0hYuKBZoVqWpAMfLOeIh2UI/DCQ5ruodIjvsugZtjUYUw2pUw==}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
 
   debug@4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -2870,12 +2901,18 @@ packages:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
 
+  ms@0.7.1:
+    resolution: {integrity: sha512-lRLiIR9fSNpnP6TC4v8+4OU7oStC01esuNowdQ34L+Gk8e5Puoc88IqJ+XAY/B3Mn2ZKis8l8HX90oU8ivzUHg==}
+
   ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
 
   mute-stream@1.0.0:
     resolution: {integrity: sha512-avsJQhyd+680gKXyG/sQc0nXaC6rBkPOfyHYcFb9+hdkqQkR9bdnkJ0AMZhke0oesPqIO+mFFJ+IdBc7mst4IA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  nan@2.22.0:
+    resolution: {integrity: sha512-nbajikzWTMwsW+eSsNm3QwlOs7het9gGJU5dDZzRTQGk03vyBOauxgI4VakDzE0PtsGTmXPsXTbbjVhRwR5mpw==}
 
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
@@ -2907,6 +2944,14 @@ packages:
   nice-try@1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
 
+  noble@1.9.1:
+    resolution: {integrity: sha512-5sbPLvCh1zJqy5caq+oQQE9eYoXB/ePweLWuN8UeapWO6KgFu4SS0VeLmYc23HTfWAXKb/ey6rtEvHwn9aY5Iw==}
+    engines: {node: '>=0.8'}
+    os: [darwin, linux, freebsd, win32]
+
+  node-addon-api@4.3.0:
+    resolution: {integrity: sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -2918,6 +2963,10 @@ packages:
   node-fetch@3.3.2:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
 
   node-releases@2.0.14:
     resolution: {integrity: sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==}
@@ -4075,6 +4124,10 @@ packages:
     resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  usb@1.9.2:
+    resolution: {integrity: sha512-dryNz030LWBPAf6gj8vyq0Iev3vPbCLHCT8dBw3gQRXRzVNsIdeuU+VjPp3ksmSPkeMAl1k+kQ14Ij0QHyeiAg==}
+    engines: {node: '>=10.16.0'}
+
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
@@ -4230,6 +4283,11 @@ packages:
   xdg-basedir@5.1.0:
     resolution: {integrity: sha512-GCPAHLvrIH13+c0SuacwvRYj2SxJXQ4kaVTT5xgL3kPrz56XxkF21IGhjSE1+W0aw7gpBWRGXLCPnPby6lSpmQ==}
     engines: {node: '>=12'}
+
+  xpc-connection@0.1.4:
+    resolution: {integrity: sha512-Np4+cx5l9zhSNrH5O5niVqVT0vBnja4IG5CxuBgCvTdWGiyujRwUTSj/FtT66KX84/MMCKpt5wIcuORBMFT6qQ==}
+    engines: {node: '>=0.8'}
+    os: [darwin]
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -4645,6 +4703,8 @@ snapshots:
     dependencies:
       call-bind: 1.0.7
 
+  '@noble/ciphers@1.1.3': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -4964,6 +5024,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.13.0':
     optional: true
+
+  '@scure/base@1.2.1': {}
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -5345,6 +5407,16 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
+  bluetooth-hci-socket@0.5.1:
+    dependencies:
+      debug: 2.2.0
+      nan: 2.22.0
+    optionalDependencies:
+      usb: 1.9.2
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
   bole@5.0.11:
     dependencies:
       fast-safe-stringify: 2.1.1
@@ -5362,6 +5434,9 @@ snapshots:
       type-fest: 2.19.0
       widest-line: 4.0.1
       wrap-ansi: 8.1.0
+
+  bplist-parser@0.0.6:
+    optional: true
 
   brace-expansion@1.1.11:
     dependencies:
@@ -5764,6 +5839,10 @@ snapshots:
       call-bind: 1.0.7
       es-errors: 1.3.0
       is-data-view: 1.0.1
+
+  debug@2.2.0:
+    dependencies:
+      ms: 0.7.1
 
   debug@4.3.4:
     dependencies:
@@ -7201,9 +7280,14 @@ snapshots:
 
   mri@1.2.0: {}
 
+  ms@0.7.1: {}
+
   ms@2.1.2: {}
 
   mute-stream@1.0.0: {}
+
+  nan@2.22.0:
+    optional: true
 
   nanoid@3.3.7: {}
 
@@ -7229,6 +7313,19 @@ snapshots:
 
   nice-try@1.0.5: {}
 
+  noble@1.9.1:
+    dependencies:
+      debug: 2.2.0
+    optionalDependencies:
+      bluetooth-hci-socket: 0.5.1
+      bplist-parser: 0.0.6
+      xpc-connection: 0.1.4
+    transitivePeerDependencies:
+      - supports-color
+
+  node-addon-api@4.3.0:
+    optional: true
+
   node-domexception@1.0.0: {}
 
   node-fetch@3.0.0-beta.9:
@@ -7243,6 +7340,9 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
+
+  node-gyp-build@4.8.4:
+    optional: true
 
   node-releases@2.0.14: {}
 
@@ -8473,6 +8573,12 @@ snapshots:
 
   url-join@5.0.0: {}
 
+  usb@1.9.2:
+    dependencies:
+      node-addon-api: 4.3.0
+      node-gyp-build: 4.8.4
+    optional: true
+
   util-deprecate@1.0.2: {}
 
   v8-to-istanbul@9.2.0:
@@ -8644,6 +8750,11 @@ snapshots:
       typedarray-to-buffer: 3.1.5
 
   xdg-basedir@5.1.0: {}
+
+  xpc-connection@0.1.4:
+    dependencies:
+      nan: 2.22.0
+    optional: true
 
   yallist@3.1.1: {}
 

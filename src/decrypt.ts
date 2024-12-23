@@ -17,7 +17,10 @@ import type { SOPS } from "./sops-file.js";
 
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 
-async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
+export async function getSopsEncryptionKeyForRecipient(
+  sops: SOPS,
+  secretKey: string,
+) {
   const pubKey = await getPublicAgeKey(secretKey);
 
   const recipient = sops.sops.age.find((config) => config.recipient === pubKey);
@@ -28,7 +31,7 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
   return decryptAgeEncryptionKey(recipient.enc, secretKey);
 }
 
-function decryptValue(
+export function decryptValue(
   value: string,
   decryptionKey: Buffer,
   aad = "",
@@ -107,9 +110,11 @@ export async function decrypt(sops: SOPS, options: DecryptOptions) {
 
   const decryptionKey = await getSopsEncryptionKeyForRecipient(sops, secretKey);
 
+  console.log(options);
   // If we have a path to a specific key, only decrypt that
   if (keyPath) {
     const value = get(sops, keyPath);
+    console.log(JSON.stringify(value));
     if (typeof value !== "string") {
       throw new Error(`Unable to get sops value at keyPath="${keyPath}"`);
     }
