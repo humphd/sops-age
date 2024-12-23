@@ -1,6 +1,16 @@
 import { gcm } from '@noble/ciphers/aes';
 import { utf8ToBytes, bytesToUtf8, bytesToHex, hexToBytes } from '@noble/ciphers/utils';
 
+function uint8ArrayToBase64(bytes) {
+  const binString = Array.from(bytes, (x) => String.fromCodePoint(x)).join("");
+  return btoa(binString);
+}
+
+function base64ToUint8Array(base64) {
+  const binString = atob(base64);
+  return new Uint8Array(binString.split('').map(c => c.charCodeAt(0)));
+}
+
 // Regular expression for SOPS format
 const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
 
@@ -58,9 +68,9 @@ class Cipher {
     const tagBytes = encrypted.slice(-16);
 
     // Convert to base64 strings
-    const dataBase64 = Buffer.from(dataBytes).toString('base64');
-    const ivBase64 = Buffer.from(iv).toString('base64');
-    const tagBase64 = Buffer.from(tagBytes).toString('base64');
+    const dataBase64 = uint8ArrayToBase64(dataBytes);
+    const ivBase64 = uint8ArrayToBase64(iv);
+    const tagBase64 = uint8ArrayToBase64(tagBytes);
 
     return `ENC[AES256_GCM,data:${dataBase64},iv:${ivBase64},tag:${tagBase64},type:${encryptedType}]`;
   }
@@ -72,9 +82,9 @@ class Cipher {
     }
 
     try {
-      const data = Buffer.from(matches[1], 'base64');
-      const iv = Buffer.from(matches[2], 'base64');
-      const tag = Buffer.from(matches[3], 'base64');
+      const data = base64ToUint8Array(matches[1]);
+      const iv = base64ToUint8Array(matches[2]);
+      const tag = base64ToUint8Array(matches[3]);
       const datatype = matches[4];
 
       return { data, iv, tag, datatype };
@@ -119,10 +129,10 @@ function main() {
   const cipher = new Cipher();
   
   // Fixed 32-byte key (AES-256)
-  const key = Buffer.from("12345678901234567890123456789012");
+  const key = new Uint8Array([49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50]);
 
   // Fixed 32-byte IV/nonce  
-  const iv = Buffer.from("12345678901234567890123456789012");
+  const iv = new Uint8Array([49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50]);
   
   try {
     const encrypted = cipher.encrypt("Hello, World!", key, iv, "some-auth-data");
