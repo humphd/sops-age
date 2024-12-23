@@ -37,43 +37,22 @@ func isEmpty(v interface{}) bool {
     }
 }
 
-type stashKey struct {
-	additionalData string
-	plaintext      interface{}
-}
-
 // Cipher encrypts and decrypts data keys with AES GCM 256
-type Cipher struct {
-	// stash is a map that stores IVs for reuse, so that the ciphertext doesn't change when decrypting and reencrypting
-	// the same values.
-	stash map[stashKey][]byte
-}
+type Cipher struct {}
 
 // NewCipher is the constructor for a new Cipher object
 func NewCipher() Cipher {
-	return Cipher{
-		stash: make(map[stashKey][]byte),
-	}
+	return Cipher{}
 }
 
 // Encrypt takes one of (string, int, float, bool) and encrypts it with the provided key and additional auth data, returning a sops-format encrypted string.
-func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string) (ciphertext string, err error) {
+func (c Cipher) Encrypt(plaintext interface{}, key []byte, iv []byte, additionalData string) (ciphertext string, err error) {
 	if isEmpty(plaintext) {
 		return "", nil
 	}
 	aescipher, err := cryptoaes.NewCipher(key)
 	if err != nil {
 		return "", fmt.Errorf("Could not initialize AES GCM encryption cipher: %s", err)
-	}
-	var iv []byte
-	if stash, ok := c.stash[stashKey{plaintext: plaintext, additionalData: additionalData}]; !ok {
-		iv = make([]byte, nonceSize)
-		_, err = rand.Read(iv)
-		if err != nil {
-			return "", fmt.Errorf("Could not generate random bytes for IV: %s", err)
-		}
-	} else {
-		iv = stash
 	}
 	gcm, err := cipher.NewGCMWithNonceSize(aescipher, nonceSize)
 	if err != nil {
@@ -113,14 +92,14 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string
 
 func main() {
     cipher := NewCipher()
-    key := make([]byte, 32) // AES-256 needs 32 bytes
-    _, err := rand.Read(key)
-    if err != nil {
-        fmt.Printf("Error generating key: %v\n", err)
-        return
-    }
     
-    encrypted, err := cipher.Encrypt("Hello, World!", key, "some-auth-data")
+    // Fixed 32-byte key (AES-256)
+    key := []byte("12345678901234567890123456789012")
+    
+    // Fixed 32-byte IV/nonce
+    iv := []byte("12345678901234567890123456789012")
+    
+    encrypted, err := cipher.Encrypt("Hello, World!", key, iv, "some-auth-data")
     if err != nil {
         fmt.Printf("Error encrypting: %v\n", err)
         return
