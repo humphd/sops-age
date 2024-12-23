@@ -174,10 +174,10 @@ async function main() {
   const cipher = new Cipher();
   
   // Fixed 32-byte key (AES-256)
-  const key = new Uint8Array(32).fill(0x12);
-  
-  // Fixed 32-byte IV/nonce
-  const iv = new Uint8Array(32).fill(0x12);
+  const key = new TextEncoder().encode("12345678901234567890123456789012");
+
+  // Fixed 32-byte IV/nonce  
+  const iv = new TextEncoder().encode("12345678901234567890123456789012");
   
   try {
     const encrypted = await cipher.encrypt("Hello, World!", key, iv, "some-auth-data");
