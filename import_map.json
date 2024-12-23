@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@noble/ciphers": "npm:@noble/ciphers",
+    "crypto": "node:crypto"
+  }
+}

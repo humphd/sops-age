@@ -168,17 +168,20 @@ func main() {
     }
     
     // Fixed 32-byte IV/nonce
-    iv := []byte("12345678901234567890123456789012")
+    // iv := []byte("12345678901234567890123456789012")
     
-    encrypted, err := cipher.Encrypt("Hello, World!", key, iv, "some-auth-data")
+/*    encrypted, err := cipher.Encrypt("Hello, World!", key, iv, "some-auth-data")
     if err != nil {
         fmt.Printf("Error encrypting: %v\n", err)
         return
-    }
+    }*/
+		encrypted := "ENC[AES256_GCM,data:s0/KBsFec29XLrGbAnLiNA==," +
+		"iv:k5oP3kb8tTbZaL3PxbFWN8ToOb8vfv2b1EuPz1LbmYU=," +
+		"tag:n1RlTSRKGgoB909D4I3n+A==,type:str]";
     
     fmt.Printf("Encrypted: %s\n", encrypted)
     
-    decrypted, err := cipher.Decrypt(encrypted, key, "some-auth-data")
+    decrypted, err := cipher.Decrypt(encrypted, key, "secret:")
     if err != nil {
         fmt.Printf("Error decrypting: %v\n", err)
         return
