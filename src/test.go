@@ -104,5 +104,5 @@ func main() {
         return
     }
     
-    fmt.Printf("Encrypted value: %s\n", encrypted)
+    fmt.Printf("%s\n", encrypted)
 }

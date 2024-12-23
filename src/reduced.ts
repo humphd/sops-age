@@ -35,7 +35,7 @@ if (match) {
 
   const iv = base64ToUint8Array(ivBase64);
   const tag = base64ToUint8Array(tagBase64);
-  console.log(`iv length: ${iv.length}, value: ${ivBase64}`);
+  console.log(`iv length: ${iv.length}, tag length: ${tag.length}`);
 
   const decipher = createDecipheriv("aes-256-gcm", uintDecryptionKey, iv);
   decipher.setAuthTag(tag);
