@@ -135,7 +135,11 @@ function main() {
   const cipher = new Cipher();
   
   // Fixed 32-byte key (AES-256)
-  const key = new Uint8Array([49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50]);
+  const key = new Uint8Array([
+    0x79, 0x82, 0xc4, 0x88, 0xb1, 0x50, 0x9e, 0x98, 0xd8, 0x92, 0xc5, 0x93, 0x88,
+    0xaa, 0x70, 0xbf, 0x6b, 0x0a, 0x87, 0x0f, 0x96, 0x25, 0xbe, 0x45, 0xa3, 0xf6,
+    0x98, 0xd9, 0x8a, 0x97, 0xb3, 0x07,
+  ]);
 
   // Fixed 32-byte IV/nonce  
   const iv = new Uint8Array([49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50,51,52,53,54,55,56,57,48,49,50]);
