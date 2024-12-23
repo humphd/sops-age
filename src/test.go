@@ -2,15 +2,13 @@ package main
 
 
 import (
-	cryptoaes "crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"encoding/base64"
-	"fmt"
-	"regexp"
-	"strconv"
+    cryptoaes "crypto/aes"
+    "crypto/cipher"
+    "crypto/rand"
+    "encoding/base64"
+    "fmt"
+    "strconv"
 )
-import "fmt"
 
 type encryptedValue struct {
 	data     []byte
@@ -20,6 +18,24 @@ type encryptedValue struct {
 }
 
 const nonceSize int = 32
+
+func isEmpty(v interface{}) bool {
+    if v == nil {
+        return true
+    }
+    switch value := v.(type) {
+    case string:
+        return value == ""
+    case int:
+        return value == 0
+    case float64:
+        return value == 0
+    case bool:
+        return false
+    default:
+        return false
+    }
+}
 
 type stashKey struct {
 	additionalData string
@@ -84,9 +100,6 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string
 		} else {
 			plainBytes = []byte("False")
 		}
-	case sops.Comment:
-		encryptedType = "comment"
-		plainBytes = []byte(value.Value)
 	default:
 		return "", fmt.Errorf("Value to encrypt has unsupported type %T", value)
 	}
@@ -99,5 +112,19 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, additionalData string
 }
 
 func main() {
-    fmt.Println("Hello, World!")
+    cipher := NewCipher()
+    key := make([]byte, 32) // AES-256 needs 32 bytes
+    _, err := rand.Read(key)
+    if err != nil {
+        fmt.Printf("Error generating key: %v\n", err)
+        return
+    }
+    
+    encrypted, err := cipher.Encrypt("Hello, World!", key, "some-auth-data")
+    if err != nil {
+        fmt.Printf("Error encrypting: %v\n", err)
+        return
+    }
+    
+    fmt.Printf("Encrypted value: %s\n", encrypted)
 }
