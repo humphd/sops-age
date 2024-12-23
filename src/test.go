@@ -6,9 +6,12 @@ import (
     "crypto/cipher"
     "encoding/base64"
     "fmt"
+    "regexp"
     "strconv"
     "strings"
 )
+
+var encre = regexp.MustCompile(`^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$`)
 
 type encryptedValue struct {
 	data     []byte
@@ -94,34 +97,25 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, iv []byte, additional
 }
 
 func parse(value string) (*encryptedValue, error) {
-    if len(value) < 10 || value[:4] != "ENC[" || value[len(value)-1:] != "]" {
-        return nil, fmt.Errorf("Invalid encrypted value format")
+    matches := encre.FindStringSubmatch(value)
+    if matches == nil {
+        return nil, fmt.Errorf("Input string %s does not match sops' data format", value)
     }
-    value = value[4 : len(value)-1]
-    parts := strings.Split(value, ",")
-    if len(parts) < 4 || parts[0] != "AES256_GCM" {
-        return nil, fmt.Errorf("Invalid encrypted value format")
+    data, err := base64.StdEncoding.DecodeString(matches[1])
+    if err != nil {
+        return nil, fmt.Errorf("Error base64-decoding data: %s", err)
     }
-    
-    result := &encryptedValue{}
-    
-    for _, part := range parts[1:] {
-        kv := strings.Split(part, ":")
-        if len(kv) != 2 {
-            continue
-        }
-        switch kv[0] {
-        case "data":
-            result.data, _ = base64.StdEncoding.DecodeString(kv[1])
-        case "iv":
-            result.iv, _ = base64.StdEncoding.DecodeString(kv[1])
-        case "tag":
-            result.tag, _ = base64.StdEncoding.DecodeString(kv[1])
-        case "type":
-            result.datatype = kv[1]
-        }
+    iv, err := base64.StdEncoding.DecodeString(matches[2])
+    if err != nil {
+        return nil, fmt.Errorf("Error base64-decoding iv: %s", err)
     }
-    return result, nil
+    tag, err := base64.StdEncoding.DecodeString(matches[3])
+    if err != nil {
+        return nil, fmt.Errorf("Error base64-decoding tag: %s", err)
+    }
+    datatype := string(matches[4])
+
+    return &encryptedValue{data, iv, tag, datatype}, nil
 }
 
 func (c Cipher) Decrypt(ciphertext string, key []byte, additionalData string) (plaintext interface{}, err error) {
