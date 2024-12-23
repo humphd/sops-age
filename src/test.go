@@ -8,7 +8,6 @@ import (
     "fmt"
     "regexp"
     "strconv"
-    "strings"
 )
 
 var encre = regexp.MustCompile(`^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$`)
