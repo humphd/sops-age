@@ -4,7 +4,6 @@ package main
 import (
     cryptoaes "crypto/aes"
     "crypto/cipher"
-    "crypto/rand"
     "encoding/base64"
     "fmt"
     "strconv"
