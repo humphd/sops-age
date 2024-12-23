@@ -7,6 +7,7 @@ import (
     "encoding/base64"
     "fmt"
     "strconv"
+    "strings"
 )
 
 type encryptedValue struct {
@@ -46,6 +47,9 @@ func NewCipher() Cipher {
 
 // Encrypt takes one of (string, int, float, bool) and encrypts it with the provided key and additional auth data, returning a sops-format encrypted string.
 func (c Cipher) Encrypt(plaintext interface{}, key []byte, iv []byte, additionalData string) (ciphertext string, err error) {
+    if isEmpty(plaintext) {
+        return "", nil
+    }
 	if isEmpty(plaintext) {
 		return "", nil
 	}
@@ -89,6 +93,77 @@ func (c Cipher) Encrypt(plaintext interface{}, key []byte, iv []byte, additional
 		encryptedType), nil
 }
 
+func parse(value string) (*encryptedValue, error) {
+    if len(value) < 10 || value[:4] != "ENC[" || value[len(value)-1:] != "]" {
+        return nil, fmt.Errorf("Invalid encrypted value format")
+    }
+    value = value[4 : len(value)-1]
+    parts := strings.Split(value, ",")
+    if len(parts) < 4 || parts[0] != "AES256_GCM" {
+        return nil, fmt.Errorf("Invalid encrypted value format")
+    }
+    
+    result := &encryptedValue{}
+    
+    for _, part := range parts[1:] {
+        kv := strings.Split(part, ":")
+        if len(kv) != 2 {
+            continue
+        }
+        switch kv[0] {
+        case "data":
+            result.data, _ = base64.StdEncoding.DecodeString(kv[1])
+        case "iv":
+            result.iv, _ = base64.StdEncoding.DecodeString(kv[1])
+        case "tag":
+            result.tag, _ = base64.StdEncoding.DecodeString(kv[1])
+        case "type":
+            result.datatype = kv[1]
+        }
+    }
+    return result, nil
+}
+
+func (c Cipher) Decrypt(ciphertext string, key []byte, additionalData string) (plaintext interface{}, err error) {
+    if isEmpty(ciphertext) {
+        return "", nil
+    }
+    encryptedValue, err := parse(ciphertext)
+    if err != nil {
+        return nil, err
+    }
+    aescipher, err := cryptoaes.NewCipher(key)
+    if err != nil {
+        return nil, err
+    }
+
+    gcm, err := cipher.NewGCMWithNonceSize(aescipher, len(encryptedValue.iv))
+    if err != nil {
+        return nil, err
+    }
+    data := append(encryptedValue.data, encryptedValue.tag...)
+    decryptedBytes, err := gcm.Open(nil, encryptedValue.iv, data, []byte(additionalData))
+    if err != nil {
+        return nil, fmt.Errorf("Could not decrypt with AES_GCM: %s", err)
+    }
+    decryptedValue := string(decryptedBytes)
+    switch encryptedValue.datatype {
+    case "str":
+        plaintext = decryptedValue
+    case "int":
+        plaintext, err = strconv.Atoi(decryptedValue)
+    case "float":
+        plaintext, err = strconv.ParseFloat(decryptedValue, 64)
+    case "bytes":
+        plaintext = decryptedBytes
+    case "bool":
+        plaintext, err = strconv.ParseBool(decryptedValue)
+    default:
+        return nil, fmt.Errorf("Unknown datatype: %s", encryptedValue.datatype)
+    }
+    return plaintext, err
+}
+
 func main() {
     cipher := NewCipher()
     
@@ -104,5 +179,13 @@ func main() {
         return
     }
     
-    fmt.Printf("%s\n", encrypted)
+    fmt.Printf("Encrypted: %s\n", encrypted)
+    
+    decrypted, err := cipher.Decrypt(encrypted, key, "some-auth-data")
+    if err != nil {
+        fmt.Printf("Error decrypting: %v\n", err)
+        return
+    }
+    
+    fmt.Printf("Decrypted: %s\n", decrypted)
 }
