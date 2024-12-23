@@ -59,7 +59,10 @@ class Cipher {
         throw new Error(`Value to encrypt has unsupported type ${typeof plaintext}`);
     }
 
-    const aes = gcm(key, iv);
+    // Convert additionalData to Uint8Array if provided
+    const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
+
+    const aes = gcm(key, iv, aad);
     const encrypted = aes.encrypt(plainBytes);
     
     // Noble's GCM implementation returns concatenated ciphertext+tag
@@ -100,12 +103,15 @@ class Cipher {
 
     const encryptedValue = this.parse(ciphertext);
 
+    // Convert additionalData to Uint8Array if provided
+    const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
+
     // Combine data and tag for noble-ciphers format
     const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
     combined.set(encryptedValue.data);
     combined.set(encryptedValue.tag, encryptedValue.data.length);
 
-    const aes = gcm(key, encryptedValue.iv);
+    const aes = gcm(key, encryptedValue.iv, aad);
     const decrypted = aes.decrypt(combined);
     const decryptedValue = bytesToUtf8(decrypted);
 
