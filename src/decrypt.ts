@@ -45,12 +45,15 @@ function decryptValue(
 ): Buffer | boolean | number | string {
   // Convert Buffer to Uint8Array for noble-ciphers
   const key = new Uint8Array(decryptionKey);
-  const aad = `${path.join(":")}:`;
+  /**
+   * add testcases to build path like [complex:array:0], cos 0 not allowed
+   */
+  const aad = `${path.filter(x => typeof x === 'string').join(":")}:`;
   let result;
   try {
     result = decryptSOPS(value, key, aad);
   } catch (e) {
-    console.error(aad, value, e);
+    console.error(JSON.stringify(path), value, e);
     throw e;
   }
 
