@@ -35,20 +35,21 @@ function isEmpty(v) {
   }
 }
 
-functin decrypt(ciphertext, key, additionalData) {
-  if (isEmpty(ciphertext)) {
-    return "";
-  }
-
-  const encryptedValue = this.parse(ciphertext);
-
+function decrypt(
+  encryptedValue: {
+    data: Uint8Array;
+    datatype: string;
+    iv: Uint8Array;
+    tag: Uint8Array;
+  },
+  key: Uint8Array,
+  additionalData?: string
+) {
   // Convert additionalData to Uint8Array if provided
   const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
 
   // Combine data and tag for noble-ciphers format
-  const combined = new Uint8Array(
-    encryptedValue.data.length + encryptedValue.tag.length,
-  );
+  const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
   combined.set(encryptedValue.data);
   combined.set(encryptedValue.tag, encryptedValue.data.length);
 
@@ -68,6 +69,15 @@ functin decrypt(ciphertext, key, additionalData) {
     default:
       throw new Error(`Unknown datatype: ${encryptedValue.datatype}`);
   }
+}
+
+function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?: string) {
+  if (isEmpty(ciphertext)) {
+    return "";
+  }
+
+  const encryptedValue = parse(ciphertext);
+  return decrypt(encryptedValue, key, additionalData);
 }
 /*
   encrypt(plaintext, key, iv, additionalData) {
