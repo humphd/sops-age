@@ -16,13 +16,11 @@ function base64ToUint8Array(base64) {
   return new Uint8Array(binString.split("").map((c) => c.charCodeAt(0)));
 }
 
-// Regular expression for SOPS format
-const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
-
 function isEmpty(v) {
   if (v === null || v === undefined) {
     return true;
   }
+
   switch (typeof v) {
     case "string":
       return v === "";
@@ -87,6 +85,7 @@ function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?:
   }
 }
 
+/*
 function encrypt(
   plaintext: Uint8Array,
   key: Uint8Array,
@@ -148,9 +147,12 @@ function encryptConvenient(plaintext: string | number | boolean, key: Uint8Array
 
   return `ENC[AES256_GCM,data:${dataBase64},iv:${ivBase64},tag:${tagBase64},type:${encryptedType}]`;
 }
+  */
 
+// Regular expression for SOPS format
+const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
 
-function parse(value) {
+function parse(value: string): ParsedEncryptedData {
   const matches = value.match(encre);
   if (!matches) {
     throw new Error(`Input string ${value} does not match sops' data format`);
@@ -164,7 +166,7 @@ function parse(value) {
 
     return { data, datatype, iv, tag };
   } catch (err) {
-    throw new Error(`Error decoding base64: ${err.message}`);
+    throw new Error(`Error decoding base64: ${err instanceof Error ? err.message : err.toString()}`);
   }
 }
 
