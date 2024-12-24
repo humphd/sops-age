@@ -52,14 +52,14 @@ export interface ParsedEncryptedData extends EncryptedData {
   datatype: SOPSDataType;
 }
 
-/** Meat of sops decryption */
+/** Decrypts data using AES-GCM with the provided key and additional data */
 function decrypt(
   encryptedValue: EncryptedData,
   key: Uint8Array,
-  additionalData?: string
+  additionalData: string
 ): string {
-  // Convert additionalData to Uint8Array if provided
-  const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
+  // Convert additionalData to Uint8Array
+  const aad = utf8ToBytes(additionalData);
 
   // Combine data and tag for noble-ciphers format
   const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
@@ -85,8 +85,8 @@ function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean |
   }
 }
 
-/** Decrypts SOPS-encrypted string using provided key and optional additional data */
-function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData?: string) {
+/** Decrypts SOPS-encrypted string using provided key and additional data */
+function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData: string) {
   if (isEmpty(ciphertext)) {
     return "";
   }
