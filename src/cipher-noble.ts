@@ -52,6 +52,7 @@ export interface ParsedEncryptedData extends EncryptedData {
   datatype: SOPSDataType;
 }
 
+/** Decrypts data using AES-GCM with the provided key and optional additional data */
 function decrypt(
   encryptedValue: EncryptedData,
   key: Uint8Array,
@@ -70,6 +71,7 @@ function decrypt(
   return bytesToUtf8(decrypted);
 }
 
+/** Converts decrypted string value to appropriate type based on SOPS datatype */
 function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean | number | string {
   switch (datatype) {
     case SOPSDataType.String:
@@ -83,6 +85,7 @@ function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean |
   }
 }
 
+/** Decrypts SOPS-encrypted string using provided key and optional additional data */
 function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData?: string) {
   if (isEmpty(ciphertext)) {
     return "";
