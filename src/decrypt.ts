@@ -42,9 +42,16 @@ function decryptValue(
   decryptionKey: Buffer,
   path: string[]
 ): Buffer | boolean | number | string {
-  // uint8Array of decryptionKey
-  const key = Buffer.from(decryptionKey);
-  const ret = decryptSOPS(value, decryptionKey, path.join(":") + ":");
+  // Convert Buffer to Uint8Array for noble-ciphers
+  const key = new Uint8Array(decryptionKey);
+  const result = decryptSOPS(value, key, path.join(":") + ":");
+  
+  // Convert Uint8Array to Buffer if that's what we got back
+  if (result instanceof Uint8Array) {
+    return Buffer.from(result);
+  }
+  
+  return result;
 }
 
 function decryptObject(obj: any, decryptionKey: Buffer, path: string[] = []) {
