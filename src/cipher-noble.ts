@@ -108,7 +108,14 @@ function parse(value: string): ParsedEncryptedData {
     const data = base64ToUint8Array(matches[1]);
     const iv = base64ToUint8Array(matches[2]);
     const tag = base64ToUint8Array(matches[3]);
-    const datatype = matches[4] as SOPSDataType;
+    const rawDatatype = matches[4];
+
+    // Validate the datatype is a valid SOPSDataType
+    if (!Object.values(SOPSDataType).includes(rawDatatype as SOPSDataType)) {
+      throw new Error(`Invalid SOPS data type: ${rawDatatype}`);
+    }
+    
+    const datatype = rawDatatype as SOPSDataType;
 
     return { data, datatype, iv, tag };
   } catch (err) {
