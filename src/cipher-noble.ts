@@ -38,7 +38,8 @@ export enum SOPSDataType {
   Boolean = "bool",
   Float = "float",
   Integer = "int",
-  String = "str"
+  String = "str",
+  Bytes = "bytes"
 }
 
 export interface ParsedEncryptedData extends EncryptedData {
@@ -61,7 +62,7 @@ function decrypt(
 }
 
 /** Converts decrypted string value to appropriate type based on SOPS datatype */
-function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean | number | string {
+function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean | number | string | Uint8Array {
   switch (datatype) {
     case SOPSDataType.String:
       return value;
@@ -71,6 +72,8 @@ function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean |
       return Number.parseFloat(value);
     case SOPSDataType.Boolean:
       return value.toLowerCase() === "true";
+    case SOPSDataType.Bytes:
+      return utf8ToBytes(value);
   }
 }
 
