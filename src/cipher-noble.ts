@@ -35,13 +35,20 @@ function isEmpty(v) {
   }
 }
 
+// Base type for encrypted data needed by decrypt
+export interface EncryptedData {
+  data: Uint8Array;
+  iv: Uint8Array;
+  tag: Uint8Array;
+}
+
+// Extended type that includes datatype, used by parse
+export interface ParsedEncryptedData extends EncryptedData {
+  datatype: string;
+}
+
 function decrypt(
-  encryptedValue: {
-    data: Uint8Array;
-    datatype: string;
-    iv: Uint8Array;
-    tag: Uint8Array;
-  },
+  encryptedValue: EncryptedData,
   key: Uint8Array,
   additionalData?: string
 ): string {
