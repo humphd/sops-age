@@ -63,6 +63,21 @@ function decrypt(
   return bytesToUtf8(decrypted);
 }
 
+function convertDecryptedValue(value: string, datatype: string): string | number | boolean {
+  switch (datatype) {
+    case "str":
+      return value;
+    case "int":
+      return Number.parseInt(value, 10);
+    case "float":
+      return Number.parseFloat(value);
+    case "bool":
+      return value.toLowerCase() === "true";
+    default:
+      throw new Error(`Unknown datatype: ${datatype}`);
+  }
+}
+
 function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData?: string) {
   if (isEmpty(ciphertext)) {
     return "";
@@ -70,19 +85,7 @@ function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData?: strin
 
   const encryptedValue = parse(ciphertext);
   const decryptedValue = decrypt(encryptedValue, key, additionalData);
-
-  switch (encryptedValue.datatype) {
-    case "str":
-      return decryptedValue;
-    case "int":
-      return Number.parseInt(decryptedValue, 10);
-    case "float":
-      return Number.parseFloat(decryptedValue);
-    case "bool":
-      return decryptedValue.toLowerCase() === "true";
-    default:
-      throw new Error(`Unknown datatype: ${encryptedValue.datatype}`);
-  }
+  return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
 }
 
 /*
