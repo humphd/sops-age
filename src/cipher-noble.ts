@@ -44,7 +44,7 @@ function decrypt(
   },
   key: Uint8Array,
   additionalData?: string
-) {
+): string {
   // Convert additionalData to Uint8Array if provided
   const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
 
@@ -55,7 +55,16 @@ function decrypt(
 
   const aes = gcm(key, encryptedValue.iv, aad);
   const decrypted = aes.decrypt(combined);
-  const decryptedValue = bytesToUtf8(decrypted);
+  return bytesToUtf8(decrypted);
+}
+
+function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?: string) {
+  if (isEmpty(ciphertext)) {
+    return "";
+  }
+
+  const encryptedValue = parse(ciphertext);
+  const decryptedValue = decrypt(encryptedValue, key, additionalData);
 
   switch (encryptedValue.datatype) {
     case "str":
@@ -69,15 +78,6 @@ function decrypt(
     default:
       throw new Error(`Unknown datatype: ${encryptedValue.datatype}`);
   }
-}
-
-function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?: string) {
-  if (isEmpty(ciphertext)) {
-    return "";
-  }
-
-  const encryptedValue = parse(ciphertext);
-  return decrypt(encryptedValue, key, additionalData);
 }
 /*
   encrypt(plaintext, key, iv, additionalData) {
