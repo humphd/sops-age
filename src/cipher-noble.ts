@@ -52,7 +52,7 @@ export interface ParsedEncryptedData extends EncryptedData {
   datatype: SOPSDataType;
 }
 
-/** Decrypts data using AES-GCM with the provided key and optional additional data */
+/** Meat of sops decryption */
 function decrypt(
   encryptedValue: EncryptedData,
   key: Uint8Array,
