@@ -86,59 +86,59 @@ function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?:
       throw new Error(`Unknown datatype: ${encryptedValue.datatype}`);
   }
 }
-/*
-  encrypt(plaintext, key, iv, additionalData) {
-    if (isEmpty(plaintext)) {
-      return "";
-    }
 
-    let plainBytes;
-    let encryptedType;
-
-    switch (typeof plaintext) {
-      case "string":
-        encryptedType = "str";
-        plainBytes = utf8ToBytes(plaintext);
-        break;
-      case "number":
-        if (Number.isInteger(plaintext)) {
-          encryptedType = "int";
-          plainBytes = utf8ToBytes(plaintext.toString());
-        } else {
-          encryptedType = "float";
-          plainBytes = utf8ToBytes(plaintext.toString());
-        }
-
-        break;
-      case "boolean":
-        encryptedType = "bool";
-        plainBytes = utf8ToBytes(plaintext ? "True" : "False");
-        break;
-      default:
-        throw new Error(
-          `Value to encrypt has unsupported type ${typeof plaintext}`,
-        );
-    }
-
-    // Convert additionalData to Uint8Array if provided
-    const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
-
-    const aes = gcm(key, iv, aad);
-    const encrypted = aes.encrypt(plainBytes);
-
-    // Noble's GCM implementation returns concatenated ciphertext+tag
-    // We need to split them for SOPS format
-    const dataBytes = encrypted.slice(0, -16);
-    const tagBytes = encrypted.slice(-16);
-
-    // Convert to base64 strings
-    const dataBase64 = uint8ArrayToBase64(dataBytes);
-    const ivBase64 = uint8ArrayToBase64(iv);
-    const tagBase64 = uint8ArrayToBase64(tagBytes);
-
-    return `ENC[AES256_GCM,data:${dataBase64},iv:${ivBase64},tag:${tagBase64},type:${encryptedType}]`;
+encrypt(plaintext, key, iv, additionalData) {
+  if (isEmpty(plaintext)) {
+    return "";
   }
-    */
+
+  let plainBytes;
+  let encryptedType;
+
+  switch (typeof plaintext) {
+    case "string":
+      encryptedType = "str";
+      plainBytes = utf8ToBytes(plaintext);
+      break;
+    case "number":
+      if (Number.isInteger(plaintext)) {
+        encryptedType = "int";
+        plainBytes = utf8ToBytes(plaintext.toString());
+      } else {
+        encryptedType = "float";
+        plainBytes = utf8ToBytes(plaintext.toString());
+      }
+
+      break;
+    case "boolean":
+      encryptedType = "bool";
+      plainBytes = utf8ToBytes(plaintext ? "True" : "False");
+      break;
+    default:
+      throw new Error(
+        `Value to encrypt has unsupported type ${typeof plaintext}`,
+      );
+  }
+
+  // Convert additionalData to Uint8Array if provided
+  const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
+
+  const aes = gcm(key, iv, aad);
+  const encrypted = aes.encrypt(plainBytes);
+
+  // Noble's GCM implementation returns concatenated ciphertext+tag
+  // We need to split them for SOPS format
+  const dataBytes = encrypted.slice(0, -16);
+  const tagBytes = encrypted.slice(-16);
+
+  // Convert to base64 strings
+  const dataBase64 = uint8ArrayToBase64(dataBytes);
+  const ivBase64 = uint8ArrayToBase64(iv);
+  const tagBase64 = uint8ArrayToBase64(tagBytes);
+
+  return `ENC[AES256_GCM,data:${dataBase64},iv:${ivBase64},tag:${tagBase64},type:${encryptedType}]`;
+}
+
 
 function parse(value) {
   const matches = value.match(encre);
