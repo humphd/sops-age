@@ -57,15 +57,14 @@ function decrypt(
   encryptedValue: EncryptedData,
   key: Uint8Array,
   additionalData: Uint8Array
-): string {
+): Uint8Array {
   // Combine data and tag for noble-ciphers format
   const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
   combined.set(encryptedValue.data);
   combined.set(encryptedValue.tag, encryptedValue.data.length);
 
   const aes = gcm(key, encryptedValue.iv, additionalData);
-  const decrypted = aes.decrypt(combined);
-  return bytesToUtf8(decrypted);
+  return aes.decrypt(combined);
 }
 
 /** Converts decrypted string value to appropriate type based on SOPS datatype */
@@ -90,7 +89,8 @@ function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData: string
 
   const encryptedValue = parse(ciphertext);
   const aad = utf8ToBytes(additionalData);
-  const decryptedValue = decrypt(encryptedValue, key, aad);
+  const decrypted = decrypt(encryptedValue, key, aad);
+  const decryptedValue = bytesToUtf8(decrypted);
   return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
 }
 
