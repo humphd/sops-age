@@ -40,43 +40,11 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
 function decryptValue(
   value: string,
   decryptionKey: Buffer,
-  path: string[],
-  aad = "",
+  path: string[]
 ): Buffer | boolean | number | string {
-  const match = value.match(
-    /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]/,
-  );
-  if (!match) {
-    return value;
-  }
-
-  const [, encValue, ivBase64, tagBase64, dataType] = match;
-  if (!encValue || !ivBase64 || !tagBase64) {
-    throw new Error("Invalid ENC format");
-  }
-
-  const iv = Buffer.from(ivBase64, "base64");
-  const tag = Buffer.from(tagBase64, "base64");
-
-  const decipher = createDecipheriv("aes-256-gcm", decryptionKey, iv);
-  decipher.setAuthTag(tag);
-  decipher.setAAD(Buffer.from(aad));
-  const decrypted = decipher.update(encValue, "base64", "utf8");
-
-  switch (dataType) {
-    case "bytes":
-      return Buffer.from(decrypted, "utf8");
-    case "str":
-      return decrypted;
-    case "int":
-      return parseInt(decrypted, 10);
-    case "float":
-      return parseFloat(decrypted);
-    case "bool":
-      return decrypted.toLowerCase() === "true";
-    default:
-      throw new Error(`Unknown type ${dataType}`);
-  }
+  // uint8Array of decryptionKey
+  const key = Buffer.from(decryptionKey);
+  const ret = decryptSOPS(value, decryptionKey, path.join(":") + ":");
 }
 
 function decryptObject(obj: any, decryptionKey: Buffer, path: string[] = []) {
