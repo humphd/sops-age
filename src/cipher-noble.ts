@@ -56,17 +56,14 @@ export interface ParsedEncryptedData extends EncryptedData {
 function decrypt(
   encryptedValue: EncryptedData,
   key: Uint8Array,
-  additionalData: string
+  additionalData: Uint8Array
 ): string {
-  // Convert additionalData to Uint8Array
-  const aad = utf8ToBytes(additionalData);
-
   // Combine data and tag for noble-ciphers format
   const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
   combined.set(encryptedValue.data);
   combined.set(encryptedValue.tag, encryptedValue.data.length);
 
-  const aes = gcm(key, encryptedValue.iv, aad);
+  const aes = gcm(key, encryptedValue.iv, additionalData);
   const decrypted = aes.decrypt(combined);
   return bytesToUtf8(decrypted);
 }
@@ -92,7 +89,8 @@ function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData: string
   }
 
   const encryptedValue = parse(ciphertext);
-  const decryptedValue = decrypt(encryptedValue, key, additionalData);
+  const aad = utf8ToBytes(additionalData);
+  const decryptedValue = decrypt(encryptedValue, key, aad);
   return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
 }
 
