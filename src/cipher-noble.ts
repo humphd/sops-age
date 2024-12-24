@@ -42,10 +42,10 @@ export interface EncryptedData {
 
 // Extended type that includes datatype, used by parse
 export enum SOPSDataType {
-  String = "str",
-  Integer = "int",
+  Boolean = "bool",
   Float = "float",
-  Boolean = "bool"
+  Integer = "int",
+  String = "str"
 }
 
 export interface ParsedEncryptedData extends EncryptedData {
@@ -70,7 +70,7 @@ function decrypt(
   return bytesToUtf8(decrypted);
 }
 
-function convertDecryptedValue(value: string, datatype: SOPSDataType): string | number | boolean {
+function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean | number | string {
   switch (datatype) {
     case SOPSDataType.String:
       return value;
@@ -80,8 +80,6 @@ function convertDecryptedValue(value: string, datatype: SOPSDataType): string | 
       return Number.parseFloat(value);
     case SOPSDataType.Boolean:
       return value.toLowerCase() === "true";
-    default:
-      throw new Error(`Unknown datatype: ${datatype}`);
   }
 }
 
