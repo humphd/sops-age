@@ -41,8 +41,15 @@ export interface EncryptedData {
 }
 
 // Extended type that includes datatype, used by parse
+export enum SOPSDataType {
+  String = "str",
+  Integer = "int",
+  Float = "float",
+  Boolean = "bool"
+}
+
 export interface ParsedEncryptedData extends EncryptedData {
-  datatype: string;
+  datatype: SOPSDataType;
 }
 
 function decrypt(
@@ -63,15 +70,15 @@ function decrypt(
   return bytesToUtf8(decrypted);
 }
 
-function convertDecryptedValue(value: string, datatype: string): string | number | boolean {
+function convertDecryptedValue(value: string, datatype: SOPSDataType): string | number | boolean {
   switch (datatype) {
-    case "str":
+    case SOPSDataType.String:
       return value;
-    case "int":
+    case SOPSDataType.Integer:
       return Number.parseInt(value, 10);
-    case "float":
+    case SOPSDataType.Float:
       return Number.parseFloat(value);
-    case "bool":
+    case SOPSDataType.Boolean:
       return value.toLowerCase() === "true";
     default:
       throw new Error(`Unknown datatype: ${datatype}`);
@@ -165,7 +172,7 @@ function parse(value: string): ParsedEncryptedData {
     const data = base64ToUint8Array(matches[1]);
     const iv = base64ToUint8Array(matches[2]);
     const tag = base64ToUint8Array(matches[3]);
-    const datatype = matches[4];
+    const datatype = matches[4] as SOPSDataType;
 
     return { data, datatype, iv, tag };
   } catch (err) {
