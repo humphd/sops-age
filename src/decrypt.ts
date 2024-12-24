@@ -88,12 +88,20 @@ function decryptObject(obj: any, decryptionKey: Buffer) {
   return obj;
 }
 
+/**
+ * Options for decrypting SOPS encrypted data
+ */
 export interface DecryptOptions {
-  // A path to a specific key in the SOPS file to decrypt
-  // see https://lodash.com/docs/#get for format
+  /**
+   * A path to a specific key in the SOPS file to decrypt.
+   * See https://lodash.com/docs/#get for format
+   */
   keyPath?: string;
-  // The secret key (e.g., AGE key) to use when decrypting. If not specified the
-  // `SOPS_AGE_KEY` env var will be used, if available.
+
+  /**
+   * The secret key (e.g., AGE key) to use when decrypting.
+   * If not specified the `SOPS_AGE_KEY` env var will be used, if available.
+   */
   secretKey?: string;
 }
 
