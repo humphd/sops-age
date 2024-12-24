@@ -143,3 +143,4 @@ secret.ini
 secrets.ini
 secret.env
 secrets.env
+.aider*

@@ -10,6 +10,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import { createDecipheriv } from "crypto";
+import { toPath } from "lodash-es";
 import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
 
@@ -28,9 +29,18 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
   return decryptAgeEncryptionKey(recipient.enc, secretKey);
 }
 
+/**
+ *
+ * @param value
+ * @param decryptionKey
+ * @param path equivalent to additionalData param in https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L79 . This gets joined into "path:to:key:" to match format of additionalData
+ * @param aad
+ * @returns
+ */
 function decryptValue(
   value: string,
   decryptionKey: Buffer,
+  path: string[],
   aad = "",
 ): Buffer | boolean | number | string {
   const match = value.match(
@@ -69,7 +79,7 @@ function decryptValue(
   }
 }
 
-function decryptObject(obj: any, decryptionKey: Buffer) {
+function decryptObject(obj: any, decryptionKey: Buffer, path: string[] = []) {
   if (typeof obj !== "object" || obj === null) {
     return obj;
   }
@@ -78,10 +88,10 @@ function decryptObject(obj: any, decryptionKey: Buffer) {
   for (const key of Object.keys(obj)) {
     const value = obj[key];
     if (typeof value === "string" && value.startsWith("ENC[AES256_GCM,data:")) {
-      obj[key] = decryptValue(value, decryptionKey);
+      obj[key] = decryptValue(value, decryptionKey, [...path, key]);
     } else if (typeof value === "object") {
       // Recursively decrypt objects and arrays
-      obj[key] = decryptObject(value, decryptionKey);
+      obj[key] = decryptObject(value, decryptionKey, [...path, key]);
     }
   }
 
@@ -123,7 +133,7 @@ export async function decrypt(sops: SOPS, options: DecryptOptions) {
       throw new Error(`Unable to get sops value at keyPath="${keyPath}"`);
     }
 
-    return decryptValue(value, decryptionKey);
+    return decryptValue(value, decryptionKey, toPath(keyPath));
   }
 
   // Otherwise, decrypt the whole thing, stripping out the sops metadata
