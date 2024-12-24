@@ -38,6 +38,7 @@
     "*": "prettier --ignore-unknown --write"
   },
   "dependencies": {
+    "@noble/ciphers": "^1.1.3",
     "age-encryption": "^0.1.5",
     "dotenv": "^16.4.5",
     "ini": "^4.1.2",

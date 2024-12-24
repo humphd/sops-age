@@ -17,6 +17,7 @@ import get from "lodash-es/get.js";
 import type { SOPS } from "./sops-file.js";
 
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
+import { decryptSOPS } from "./cipher-noble.js";
 
 async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
   const pubKey = await getPublicAgeKey(secretKey);
@@ -40,17 +41,24 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
 function decryptValue(
   value: string,
   decryptionKey: Buffer,
-  path: string[]
+  path: string[],
 ): Buffer | boolean | number | string {
   // Convert Buffer to Uint8Array for noble-ciphers
   const key = new Uint8Array(decryptionKey);
-  const result = decryptSOPS(value, key, path.join(":") + ":");
-  
+  const aad = `${path.join(":")}:`;
+  let result;
+  try {
+    result = decryptSOPS(value, key, aad);
+  } catch (e) {
+    console.error(aad, value, e);
+    throw e;
+  }
+
   // Convert Uint8Array to Buffer if that's what we got back
   if (result instanceof Uint8Array) {
     return Buffer.from(result);
   }
-  
+
   return result;
 }
 

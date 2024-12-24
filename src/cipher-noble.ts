@@ -1,8 +1,5 @@
 import { gcm } from "@noble/ciphers/aes";
-import {
-  bytesToUtf8,
-  utf8ToBytes,
-} from "@noble/ciphers/utils";
+import { bytesToUtf8, utf8ToBytes } from "@noble/ciphers/utils";
 
 function base64ToUint8Array(base64) {
   const binString = atob(base64);
@@ -36,10 +33,10 @@ export interface EncryptedData {
 // Valid SOPS data types
 export enum SOPSDataType {
   Boolean = "bool",
+  Bytes = "bytes",
   Float = "float",
   Integer = "int",
   String = "str",
-  Bytes = "bytes"
 }
 
 export interface ParsedEncryptedData extends EncryptedData {
@@ -50,10 +47,12 @@ export interface ParsedEncryptedData extends EncryptedData {
 function decrypt(
   encryptedValue: EncryptedData,
   key: Uint8Array,
-  additionalData: Uint8Array
+  additionalData: Uint8Array,
 ): Uint8Array {
   // Combine data and tag for noble-ciphers format
-  const combined = new Uint8Array(encryptedValue.data.length + encryptedValue.tag.length);
+  const combined = new Uint8Array(
+    encryptedValue.data.length + encryptedValue.tag.length,
+  );
   combined.set(encryptedValue.data);
   combined.set(encryptedValue.tag, encryptedValue.data.length);
 
@@ -62,7 +61,10 @@ function decrypt(
 }
 
 /** Converts decrypted string value to appropriate type based on SOPS datatype */
-function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean | number | string | Uint8Array {
+function convertDecryptedValue(
+  value: string,
+  datatype: SOPSDataType,
+): Uint8Array | boolean | number | string {
   switch (datatype) {
     case SOPSDataType.String:
       return value;
@@ -114,12 +116,14 @@ function parse(value: string): ParsedEncryptedData {
     if (!Object.values(SOPSDataType).includes(rawDatatype as SOPSDataType)) {
       throw new Error(`Invalid SOPS data type: ${rawDatatype}`);
     }
-    
+
     const datatype = rawDatatype as SOPSDataType;
 
     return { data, datatype, iv, tag };
   } catch (err) {
-    throw new Error(`Error decoding base64: ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(
+      `Error decoding base64: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 }
 
