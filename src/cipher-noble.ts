@@ -63,7 +63,7 @@ function decrypt(
   return bytesToUtf8(decrypted);
 }
 
-function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?: string) {
+function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData?: string) {
   if (isEmpty(ciphertext)) {
     return "";
   }
@@ -75,9 +75,9 @@ function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?:
     case "str":
       return decryptedValue;
     case "int":
-      return parseInt(decryptedValue, 10);
+      return Number.parseInt(decryptedValue, 10);
     case "float":
-      return parseFloat(decryptedValue);
+      return Number.parseFloat(decryptedValue);
     case "bool":
       return decryptedValue.toLowerCase() === "true";
     default:
@@ -149,7 +149,7 @@ function encryptConvenient(plaintext: string | number | boolean, key: Uint8Array
 }
   */
 
-// Regular expression for SOPS format
+// Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
 const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
 
 function parse(value: string): ParsedEncryptedData {
