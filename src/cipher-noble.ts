@@ -166,7 +166,7 @@ function parse(value: string): ParsedEncryptedData {
 
     return { data, datatype, iv, tag };
   } catch (err) {
-    throw new Error(`Error decoding base64: ${err instanceof Error ? err.message : err.toString()}`);
+    throw new Error(`Error decoding base64: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
