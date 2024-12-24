@@ -87,13 +87,33 @@ function decryptConvenient(ciphertext: string, key: Uint8Array, additionalData?:
   }
 }
 
-encrypt(plaintext, key, iv, additionalData) {
+function encrypt(
+  plaintext: Uint8Array,
+  key: Uint8Array,
+  iv: Uint8Array,
+  additionalData?: string
+): { data: Uint8Array; tag: Uint8Array } {
+  // Convert additionalData to Uint8Array if provided
+  const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
+
+  const aes = gcm(key, iv, aad);
+  const encrypted = aes.encrypt(plaintext);
+
+  // Noble's GCM implementation returns concatenated ciphertext+tag
+  // We need to split them
+  return {
+    data: encrypted.slice(0, -16),
+    tag: encrypted.slice(-16)
+  };
+}
+
+function encryptConvenient(plaintext: string | number | boolean, key: Uint8Array, iv: Uint8Array, additionalData?: string): string {
   if (isEmpty(plaintext)) {
     return "";
   }
 
-  let plainBytes;
-  let encryptedType;
+  let plainBytes: Uint8Array;
+  let encryptedType: string;
 
   switch (typeof plaintext) {
     case "string":
@@ -108,7 +128,6 @@ encrypt(plaintext, key, iv, additionalData) {
         encryptedType = "float";
         plainBytes = utf8ToBytes(plaintext.toString());
       }
-
       break;
     case "boolean":
       encryptedType = "bool";
@@ -120,21 +139,12 @@ encrypt(plaintext, key, iv, additionalData) {
       );
   }
 
-  // Convert additionalData to Uint8Array if provided
-  const aad = additionalData ? utf8ToBytes(additionalData) : undefined;
-
-  const aes = gcm(key, iv, aad);
-  const encrypted = aes.encrypt(plainBytes);
-
-  // Noble's GCM implementation returns concatenated ciphertext+tag
-  // We need to split them for SOPS format
-  const dataBytes = encrypted.slice(0, -16);
-  const tagBytes = encrypted.slice(-16);
+  const { data, tag } = encrypt(plainBytes, key, iv, additionalData);
 
   // Convert to base64 strings
-  const dataBase64 = uint8ArrayToBase64(dataBytes);
+  const dataBase64 = uint8ArrayToBase64(data);
   const ivBase64 = uint8ArrayToBase64(iv);
-  const tagBase64 = uint8ArrayToBase64(tagBytes);
+  const tagBase64 = uint8ArrayToBase64(tag);
 
   return `ENC[AES256_GCM,data:${dataBase64},iv:${ivBase64},tag:${tagBase64},type:${encryptedType}]`;
 }
