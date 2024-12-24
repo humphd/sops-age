@@ -1,15 +1,8 @@
 import { gcm } from "@noble/ciphers/aes";
 import {
-  bytesToHex,
   bytesToUtf8,
-  hexToBytes,
   utf8ToBytes,
 } from "@noble/ciphers/utils";
-
-function uint8ArrayToBase64(bytes) {
-  const binString = Array.from(bytes, (x) => String.fromCodePoint(x)).join("");
-  return btoa(binString);
-}
 
 function base64ToUint8Array(base64) {
   const binString = atob(base64);
@@ -40,7 +33,7 @@ export interface EncryptedData {
   tag: Uint8Array;
 }
 
-// Extended type that includes datatype, used by parse
+// Valid SOPS data types
 export enum SOPSDataType {
   Boolean = "bool",
   Float = "float",
@@ -81,20 +74,53 @@ function convertDecryptedValue(value: string, datatype: SOPSDataType): boolean |
   }
 }
 
-/** Decrypts SOPS-encrypted string using provided key and additional data */
-function decryptSOPS(ciphertext: string, key: Uint8Array, additionalData: string) {
+/** Decrypts SOPS-encrypted string using provided key and additional data *
+ * @param ciphertext SOPS-encrypted "ENC[AES256_GCM,...]" string
+ * @param key AES key to use for decryption
+ * @param path Path to the value being decrypted, used as additional data for decryption
+ * @returns Decrypted value as a string, number, boolean, or Buffer
+ * */
+export function decryptSOPS(ciphertext: string, key: Uint8Array, path: string) {
   if (isEmpty(ciphertext)) {
     return "";
   }
 
   const encryptedValue = parse(ciphertext);
-  const aad = utf8ToBytes(additionalData);
+  const aad = utf8ToBytes(path);
   const decrypted = decrypt(encryptedValue, key, aad);
   const decryptedValue = bytesToUtf8(decrypted);
   return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
 }
 
+// Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
+const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
+
+function parse(value: string): ParsedEncryptedData {
+  const matches = value.match(encre);
+  if (!matches) {
+    throw new Error(`Input string ${value} does not match sops' data format`);
+  }
+
+  try {
+    const data = base64ToUint8Array(matches[1]);
+    const iv = base64ToUint8Array(matches[2]);
+    const tag = base64ToUint8Array(matches[3]);
+    const datatype = matches[4] as SOPSDataType;
+
+    return { data, datatype, iv, tag };
+  } catch (err) {
+    throw new Error(`Error decoding base64: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
 /*
+in unlikely case we ever need to encrypt data:
+
+function uint8ArrayToBase64(bytes) {
+  const binString = Array.from(bytes, (x) => String.fromCodePoint(x)).join("");
+  return btoa(binString);
+}
+
 function encrypt(
   plaintext: Uint8Array,
   key: Uint8Array,
@@ -157,25 +183,3 @@ function encryptConvenient(plaintext: string | number | boolean, key: Uint8Array
   return `ENC[AES256_GCM,data:${dataBase64},iv:${ivBase64},tag:${tagBase64},type:${encryptedType}]`;
 }
   */
-
-// Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
-const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
-
-function parse(value: string): ParsedEncryptedData {
-  const matches = value.match(encre);
-  if (!matches) {
-    throw new Error(`Input string ${value} does not match sops' data format`);
-  }
-
-  try {
-    const data = base64ToUint8Array(matches[1]);
-    const iv = base64ToUint8Array(matches[2]);
-    const tag = base64ToUint8Array(matches[3]);
-    const datatype = matches[4] as SOPSDataType;
-
-    return { data, datatype, iv, tag };
-  } catch (err) {
-    throw new Error(`Error decoding base64: ${err instanceof Error ? err.message : String(err)}`);
-  }
-}
-
