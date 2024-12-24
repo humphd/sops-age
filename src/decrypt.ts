@@ -48,7 +48,7 @@ function decryptValue(
   /**
    * add testcases to build path like [complex:array:0], cos 0 not allowed
    */
-  const aad = `${path.filter(x => typeof x === 'string').join(":")}:`;
+  const aad = `${path.filter(x => !/^[0-9]/.test(x)).join(":")}:`;
   let result;
   try {
     result = decryptSOPS(value, key, aad);
