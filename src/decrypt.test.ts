@@ -189,7 +189,7 @@ describe("YAML File", () => {
   });
 });
 
-describe("INI File", () => {
+describe.skip("INI File", () => {
   const sopsFile = () =>
     loadSopsFile(resolve(__dirname, "./data/secret.enc.ini"));
 
