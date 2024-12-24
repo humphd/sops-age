@@ -189,6 +189,14 @@ describe("YAML File", () => {
   });
 });
 
+/**
+INI files are basically broken in SOPS.
+They add a DEFAULT section for top-level keys
+and if you have an actual DEFAULT section, it gets combined
+We would need a more clever key naming algo to deal with this.
+DEFAULT:secret: ENC[AES256_GCM,data:lqBKPgtSKHgUIdEz9x1rbA==,iv:mzSoH/7XrD1u12bvJ9hgTJMG4JY68Y7Lv13+4hO08Xg=,tag:cC3Cm4bwlSlilJm6GkxPXw==,type:str]
+complex:string: ENC[AES256_GCM,data:rrCuH5h+,iv:1e/nDuSgbiqKG7TeqcTjH5dsD2rPyVcLWQDXTOr2tzI=,tag:QJOXdlT9sWgpzQkZD+Cqbg==,type:str]
+ */
 describe.skip("INI File", () => {
   const sopsFile = () =>
     loadSopsFile(resolve(__dirname, "./data/secret.enc.ini"));
