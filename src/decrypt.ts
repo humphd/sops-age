@@ -106,18 +106,13 @@ function path2gopath(path: string[]): string {
   return `${path.filter((x) => !/^\d+$/.test(x)).join(":")}:`;
 }
 
-/**
- *
- * @param value
- * @param decryptionKey
- * @param path equivalent to additionalData param in https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L79 . This gets joined into "path:to:key:" to match format of additionalData
- * @param aad
- * @returns
- */
-
 /** 
  * Decrypts SOPS-encrypted string using provided key and additional data.
  * Handles parsing the SOPS format and converting to the appropriate data type.
+ * @param ciphertext Encrypted string in SOPS format
+ * @param decryptionKey Key used for decryption
+ * @param path Path to the encrypted value for additional authentication
+ * @returns Decrypted value converted to appropriate type
  */
 function decryptSOPSValue(
   ciphertext: string,
