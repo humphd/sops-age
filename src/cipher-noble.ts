@@ -8,7 +8,7 @@ export interface EncryptedData {
 }
 
 /** Decrypts data using AES-GCM with the provided key and additional data */
-function decrypt(
+function decryptAesGcm(
   encryptedValue: EncryptedData,
   key: Uint8Array,
   additionalData: Uint8Array,
@@ -74,7 +74,7 @@ export function decryptSOPS(ciphertext: string, key: Uint8Array, path: string) {
 
   const encryptedValue = parse(ciphertext);
   const aad = new TextEncoder().encode(path);
-  const decrypted = decrypt(encryptedValue, key, aad);
+  const decrypted = decryptAesGcm(encryptedValue, key, aad);
   const decryptedValue = new TextDecoder().decode(decrypted);
   return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
 }
