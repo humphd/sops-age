@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
@@ -12,17 +13,9 @@ const AGE_SECRET_KEY =
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const EXPECTED_DECRYPTED_SECRET_JSON = {
-  boolean: true,
-  complex: {
-    array: ["one", "two", "three"],
-    value: "this is a secret",
-  },
-  float: 3.14,
-  int: 7,
-  secret: "this is a secret",
-  string: "string",
-};
+const EXPECTED_DECRYPTED_SECRET_JSON = JSON.parse(
+  await readFile(resolve(__dirname, "./data/secret.json"), "utf-8"),
+);
 
 const sopsFile = () =>
   loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
