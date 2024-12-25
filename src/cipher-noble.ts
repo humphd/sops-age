@@ -8,7 +8,7 @@ export interface EncryptedData {
 }
 
 /** Decrypts data using AES-GCM with the provided key and additional data */
-function decryptAesGcm(
+export function decryptAesGcm(
   encryptedValue: EncryptedData,
   key: Uint8Array,
   additionalData: Uint8Array,
@@ -22,91 +22,6 @@ function decryptAesGcm(
 
   const aes = gcm(key, encryptedValue.iv, additionalData);
   return aes.decrypt(combined);
-}
-
-// Valid SOPS data types
-export enum SOPSDataType {
-  Boolean = "bool",
-  Bytes = "bytes",
-  Float = "float",
-  Integer = "int",
-  String = "str",
-}
-
-export interface ParsedEncryptedData extends EncryptedData {
-  datatype: SOPSDataType;
-}
-
-/** Type representing all possible decrypted values */
-export type DecryptedValue = Uint8Array | boolean | number | string;
-
-/** Converts decrypted string value to appropriate type based on SOPS datatype */
-export function convertDecryptedValue(
-  value: string,
-  datatype: SOPSDataType,
-): DecryptedValue {
-  switch (datatype) {
-    case SOPSDataType.Boolean:
-      return value.toLowerCase() === "true";
-    case SOPSDataType.Bytes:
-      return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
-    case SOPSDataType.Float:
-      return Number.parseFloat(value);
-    case SOPSDataType.Integer:
-      return Number.parseInt(value, 10);
-    case SOPSDataType.String:
-      return value;
-    default:
-      throw new Error(`Unknown datatype: ${datatype}`);
-  }
-}
-
-/** Decrypts SOPS-encrypted string using provided key and additional data *
- * @param ciphertext SOPS-encrypted "ENC[AES256_GCM,...]" string
- * @param key AES key to use for decryption
- * @param path Path to the value being decrypted, used as additional data for decryption
- * @returns Decrypted value as a string, number, boolean, or Buffer
- * */
-export function decryptSOPS(ciphertext: string, key: Uint8Array, path: string) {
-  if (!ciphertext) {
-    return "";
-  }
-
-  const encryptedValue = parse(ciphertext);
-  const aad = new TextEncoder().encode(path);
-  const decrypted = decryptAesGcm(encryptedValue, key, aad);
-  const decryptedValue = new TextDecoder().decode(decrypted);
-  return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
-}
-
-// Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
-const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
-
-function parse(value: string): ParsedEncryptedData {
-  const matches = value.match(encre);
-  if (!matches) {
-    throw new Error(`Input string ${value} does not match sops' data format`);
-  }
-
-  try {
-    const data = Uint8Array.from(atob(matches[1]), (c) => c.charCodeAt(0));
-    const iv = Uint8Array.from(atob(matches[2]), (c) => c.charCodeAt(0));
-    const tag = Uint8Array.from(atob(matches[3]), (c) => c.charCodeAt(0));
-    const rawDatatype = matches[4];
-
-    // Validate the datatype is a valid SOPSDataType
-    if (!Object.values(SOPSDataType).includes(rawDatatype as SOPSDataType)) {
-      throw new Error(`Invalid SOPS data type: ${rawDatatype}`);
-    }
-
-    const datatype = rawDatatype as SOPSDataType;
-
-    return { data, datatype, iv, tag };
-  } catch (err) {
-    throw new Error(
-      `Error decoding base64: ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
 }
 
 /*
