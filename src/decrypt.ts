@@ -183,6 +183,21 @@ export interface DecryptOptions {
   secretKey?: string;
 }
 
+/**
+ * Decrypts a SOPS-encrypted data structure using an AGE key.
+ * 
+ * If a keyPath is provided, only that specific value will be decrypted and returned.
+ * Otherwise, the entire data structure (excluding SOPS metadata) will be decrypted.
+ * 
+ * @param sops - The SOPS data structure containing encrypted values and metadata
+ * @param options - Configuration options for decryption
+ * @param options.keyPath - Optional path to decrypt a specific value (lodash path format)
+ * @param options.secretKey - AGE secret key for decryption (falls back to SOPS_AGE_KEY env var)
+ * @returns The decrypted value (if keyPath provided) or object with all values decrypted
+ * @throws {Error} If no secret key is available
+ * @throws {Error} If the keyPath is invalid or doesn't point to a string
+ * @throws {Error} If decryption fails for any encrypted value
+ */
 export async function decrypt(sops: SOPS, options: DecryptOptions) {
   const keyPath = options.keyPath;
   const secretKey = options.secretKey ?? process.env.SOPS_AGE_KEY;
