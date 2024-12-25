@@ -40,11 +40,10 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
  */
 function decryptValue(
   value: string,
-  decryptionKey: Buffer,
+  decryptionKey: Uint8Array,
   path: string[],
-): Buffer | boolean | number | string {
-  // Convert Buffer to Uint8Array for noble-ciphers
-  const key = new Uint8Array(decryptionKey);
+): Uint8Array | boolean | number | string {
+  const key = decryptionKey;
   /**
    * add testcases to build path like [complex:array:0], cos 0 not allowed
    */
@@ -57,15 +56,10 @@ function decryptValue(
     throw e;
   }
 
-  // Convert Uint8Array to Buffer if that's what we got back
-  if (result instanceof Uint8Array) {
-    return Buffer.from(result);
-  }
-
   return result;
 }
 
-function decryptObject(obj: any, decryptionKey: Buffer, path: string[] = []) {
+function decryptObject(obj: any, decryptionKey: Uint8Array, path: string[] = []) {
   if (typeof obj !== "object" || obj === null) {
     return obj;
   }
