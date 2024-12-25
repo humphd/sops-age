@@ -38,23 +38,6 @@ function decrypt(
   return aes.decrypt(combined);
 }
 
-function isEmpty(v: unknown): boolean {
-  if (v === null || v === undefined) {
-    return true;
-  }
-
-  switch (typeof v) {
-    case "string":
-      return v === "";
-    case "number":
-      return v === 0;
-    case "boolean":
-      return false;
-    default:
-      return false;
-  }
-}
-
 /** Type representing all possible decrypted values */
 export type DecryptedValue = Uint8Array | boolean | number | string;
 
@@ -86,7 +69,7 @@ export function convertDecryptedValue(
  * @returns Decrypted value as a string, number, boolean, or Buffer
  * */
 export function decryptSOPS(ciphertext: string, key: Uint8Array, path: string) {
-  if (isEmpty(ciphertext)) {
+  if (!ciphertext) {
     return "";
   }
 
