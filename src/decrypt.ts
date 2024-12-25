@@ -55,8 +55,6 @@ export function convertDecryptedValue(
   }
 }
 
-/** Decrypts SOPS-encrypted string using provided key and additional data */
-
 // Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
 const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
 
@@ -117,6 +115,10 @@ function path2gopath(path: string[]): string {
  * @returns
  */
 
+/** 
+ * Decrypts SOPS-encrypted string using provided key and additional data.
+ * Handles parsing the SOPS format and converting to the appropriate data type.
+ */
 function decryptSOPSValue(
   ciphertext: string,
   decryptionKey: Uint8Array,
