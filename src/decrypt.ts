@@ -31,14 +31,6 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
 }
 
 /**
- *
- * @param value
- * @param decryptionKey
- * @param path equivalent to additionalData param in https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L79 . This gets joined into "path:to:key:" to match format of additionalData
- * @param aad
- * @returns
- */
-/**
  * Converts a path array to SOPS' Go-style path format.
  * Filters out numeric indices and joins remaining path segments with colons.
  * @param path Array of path segments
@@ -48,6 +40,14 @@ function path2gopath(path: string[]): string {
   return `${path.filter(x => !/^\d+$/.test(x)).join(":")}:`;
 }
 
+/**
+ *
+ * @param value
+ * @param decryptionKey
+ * @param path equivalent to additionalData param in https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L79 . This gets joined into "path:to:key:" to match format of additionalData
+ * @param aad
+ * @returns
+ */
 function decryptValue(
   value: string,
   decryptionKey: Uint8Array,
@@ -55,7 +55,7 @@ function decryptValue(
 ): Uint8Array | boolean | number | string {
   const key = decryptionKey;
   const aad = path2gopath(path);
-  
+
   let result;
   try {
     result = decryptSOPS(value, key, aad);
