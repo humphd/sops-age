@@ -132,19 +132,25 @@ function path2gopath(path: string[]): string {
  * @param aad
  * @returns
  */
-function decryptValue(
-  value: string,
+
+function decryptSOPSValue(
+  ciphertext: string,
   decryptionKey: Uint8Array,
   path: string[],
-): Uint8Array | boolean | number | string {
-  const key = decryptionKey;
-  const aad = path2gopath(path);
+): DecryptedValue {
+  if (!ciphertext) {
+    return "";
+  }
 
   try {
-    return decryptSOPS(value, key, aad);
+    const encryptedValue = parse(ciphertext);
+    const aad = path2gopath(path);
+    const decrypted = decryptAesGcm(encryptedValue, decryptionKey, new TextEncoder().encode(aad));
+    const decryptedValue = new TextDecoder().decode(decrypted);
+    return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
   } catch (e) {
     throw new Error(
-      `Failed to decrypt value "${value}" at path ${JSON.stringify(path)}: ${e instanceof Error ? e.message : String(e)}`,
+      `Failed to decrypt value "${ciphertext}" at path ${JSON.stringify(path)}: ${e instanceof Error ? e.message : String(e)}`,
     );
   }
 }
@@ -162,7 +168,7 @@ function decryptObject(
   for (const key of Object.keys(obj)) {
     const value = obj[key];
     if (typeof value === "string" && value.startsWith("ENC[AES256_GCM,data:")) {
-      obj[key] = decryptValue(value, decryptionKey, [...path, key]);
+      obj[key] = decryptSOPSValue(value, decryptionKey, [...path, key]);
     } else if (typeof value === "object") {
       // Recursively decrypt objects and arrays
       obj[key] = decryptObject(value, decryptionKey, [...path, key]);
@@ -207,7 +213,7 @@ export async function decrypt(sops: SOPS, options: DecryptOptions) {
       throw new Error(`Unable to get sops value at keyPath="${keyPath}"`);
     }
 
-    return decryptValue(value, decryptionKey, toPath(keyPath));
+    return decryptSOPSValue(value, decryptionKey, toPath(keyPath));
   }
 
   // Otherwise, decrypt the whole thing, stripping out the sops metadata
