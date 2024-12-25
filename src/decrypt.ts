@@ -106,7 +106,7 @@ function path2gopath(path: string[]): string {
   return `${path.filter((x) => !/^\d+$/.test(x)).join(":")}:`;
 }
 
-/** 
+/**
  * Decrypts SOPS-encrypted string using provided key and additional data.
  * Handles parsing the SOPS format and converting to the appropriate data type.
  * @param ciphertext Encrypted string in SOPS format
