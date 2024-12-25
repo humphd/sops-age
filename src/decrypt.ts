@@ -55,7 +55,7 @@ export function convertDecryptedValue(
   }
 }
 
-/** Decrypts SOPS-encrypted string using provided key and additional data *
+/** Decrypts SOPS-encrypted string using provided key and additional data */
 
 // Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
 const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
@@ -129,7 +129,11 @@ function decryptSOPSValue(
   try {
     const encryptedValue = parse(ciphertext);
     const aad = path2gopath(path);
-    const decrypted = decryptAesGcm(encryptedValue, decryptionKey, new TextEncoder().encode(aad));
+    const decrypted = decryptAesGcm(
+      encryptedValue,
+      decryptionKey,
+      new TextEncoder().encode(aad),
+    );
     const decryptedValue = new TextDecoder().decode(decrypted);
     return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
   } catch (e) {
