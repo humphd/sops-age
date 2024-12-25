@@ -126,11 +126,20 @@ function decryptSOPSValue(
   try {
     const encryptedValue = parse(ciphertext);
     const aad = path2gopath(path);
-    const decrypted = decryptAesGcm(
-      encryptedValue,
-      decryptionKey,
-      new TextEncoder().encode(aad),
-    );
+    let decrypted;
+    try {
+      decrypted = decryptAesGcm(
+        encryptedValue,
+        decryptionKey,
+        new TextEncoder().encode(aad),
+      );
+    } catch (err) {
+      throw new Error(
+        `AES-GCM decryption failed at path ${JSON.stringify(path)} for value "${ciphertext}": ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
     const decryptedValue = new TextDecoder().decode(decrypted);
     return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
   } catch (e) {
