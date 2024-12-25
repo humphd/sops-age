@@ -126,7 +126,7 @@ function decryptSOPSValue(
   try {
     const encryptedValue = parse(ciphertext);
     const aad = path2gopath(path);
-    let decrypted;
+    let decrypted: Uint8Array;
     try {
       decrypted = decryptAesGcm(
         encryptedValue,
