@@ -1,24 +1,6 @@
 import { gcm } from "@noble/ciphers/aes";
 import { bytesToUtf8, utf8ToBytes } from "@noble/ciphers/utils";
 
-
-function isEmpty(v) {
-  if (v === null || v === undefined) {
-    return true;
-  }
-
-  switch (typeof v) {
-    case "string":
-      return v === "";
-    case "number":
-      return v === 0;
-    case "boolean":
-      return false;
-    default:
-      return false;
-  }
-}
-
 // Base type for encrypted data needed by decrypt
 export interface EncryptedData {
   data: Uint8Array;
@@ -54,6 +36,23 @@ function decrypt(
 
   const aes = gcm(key, encryptedValue.iv, additionalData);
   return aes.decrypt(combined);
+}
+
+function isEmpty(v) {
+  if (v === null || v === undefined) {
+    return true;
+  }
+
+  switch (typeof v) {
+    case "string":
+      return v === "";
+    case "number":
+      return v === 0;
+    case "boolean":
+      return false;
+    default:
+      return false;
+  }
 }
 
 /** Type representing all possible decrypted values */
