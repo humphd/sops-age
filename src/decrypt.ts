@@ -50,8 +50,12 @@ export function convertDecryptedValue(
       return Number.parseInt(value, 10);
     case SOPSDataType.String:
       return value;
-    default:
-      throw new Error(`Unknown datatype: ${datatype}`);
+    default: {
+      const exhaustiveCheck: never = datatype;
+      throw new Error(
+        `Unknown datatype: ${String(exhaustiveCheck)}`,
+      );
+    }
   }
 }
 
