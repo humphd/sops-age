@@ -55,16 +55,12 @@ function decryptValue(
 ): Uint8Array | boolean | number | string {
   const key = decryptionKey;
   const aad = path2gopath(path);
-
-  let result;
+  
   try {
-    result = decryptSOPS(value, key, aad);
+    return decryptSOPS(value, key, aad);
   } catch (e) {
-    console.error(JSON.stringify(path), value, e);
-    throw e;
+    throw new Error(`Failed to decrypt value "${value}" at path ${JSON.stringify(path)}: ${e instanceof Error ? e.message : String(e)}`);
   }
-
-  return result;
 }
 
 function decryptObject(obj: any, decryptionKey: Uint8Array, path: string[] = []) {
