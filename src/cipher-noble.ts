@@ -7,19 +7,6 @@ export interface EncryptedData {
   tag: Uint8Array;
 }
 
-// Valid SOPS data types
-export enum SOPSDataType {
-  Boolean = "bool",
-  Bytes = "bytes",
-  Float = "float",
-  Integer = "int",
-  String = "str",
-}
-
-export interface ParsedEncryptedData extends EncryptedData {
-  datatype: SOPSDataType;
-}
-
 /** Decrypts data using AES-GCM with the provided key and additional data */
 function decrypt(
   encryptedValue: EncryptedData,
@@ -37,6 +24,19 @@ function decrypt(
   return aes.decrypt(combined);
 }
 
+// Valid SOPS data types
+export enum SOPSDataType {
+  Boolean = "bool",
+  Bytes = "bytes",
+  Float = "float",
+  Integer = "int",
+  String = "str",
+}
+
+export interface ParsedEncryptedData extends EncryptedData {
+  datatype: SOPSDataType;
+}
+
 /** Type representing all possible decrypted values */
 export type DecryptedValue = Uint8Array | boolean | number | string;
 
@@ -47,9 +47,9 @@ export function convertDecryptedValue(
 ): DecryptedValue {
   switch (datatype) {
     case SOPSDataType.Boolean:
-      return value.toLowerCase() === 'true';
+      return value.toLowerCase() === "true";
     case SOPSDataType.Bytes:
-      return Uint8Array.from(atob(value), c => c.charCodeAt(0));
+      return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
     case SOPSDataType.Float:
       return Number.parseFloat(value);
     case SOPSDataType.Integer:
@@ -89,9 +89,9 @@ function parse(value: string): ParsedEncryptedData {
   }
 
   try {
-    const data = Uint8Array.from(atob(matches[1]), c => c.charCodeAt(0));
-    const iv = Uint8Array.from(atob(matches[2]), c => c.charCodeAt(0));
-    const tag = Uint8Array.from(atob(matches[3]), c => c.charCodeAt(0));
+    const data = Uint8Array.from(atob(matches[1]), (c) => c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(matches[2]), (c) => c.charCodeAt(0));
+    const tag = Uint8Array.from(atob(matches[3]), (c) => c.charCodeAt(0));
     const rawDatatype = matches[4];
 
     // Validate the datatype is a valid SOPSDataType

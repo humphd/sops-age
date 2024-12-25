@@ -9,7 +9,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { createDecipheriv } from "crypto";
 import { toPath } from "lodash-es";
 import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
@@ -37,7 +36,7 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
  * @returns Path string in format "path:to:key:"
  */
 function path2gopath(path: string[]): string {
-  return `${path.filter(x => !/^\d+$/.test(x)).join(":")}:`;
+  return `${path.filter((x) => !/^\d+$/.test(x)).join(":")}:`;
 }
 
 /**
@@ -55,15 +54,21 @@ function decryptValue(
 ): Uint8Array | boolean | number | string {
   const key = decryptionKey;
   const aad = path2gopath(path);
-  
+
   try {
     return decryptSOPS(value, key, aad);
   } catch (e) {
-    throw new Error(`Failed to decrypt value "${value}" at path ${JSON.stringify(path)}: ${e instanceof Error ? e.message : String(e)}`);
+    throw new Error(
+      `Failed to decrypt value "${value}" at path ${JSON.stringify(path)}: ${e instanceof Error ? e.message : String(e)}`,
+    );
   }
 }
 
-function decryptObject(obj: any, decryptionKey: Uint8Array, path: string[] = []) {
+function decryptObject(
+  obj: any,
+  decryptionKey: Uint8Array,
+  path: string[] = [],
+) {
   if (typeof obj !== "object" || obj === null) {
     return obj;
   }
