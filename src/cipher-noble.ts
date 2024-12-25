@@ -1,10 +1,6 @@
 import { gcm } from "@noble/ciphers/aes";
 import { bytesToUtf8, utf8ToBytes } from "@noble/ciphers/utils";
 
-function base64ToUint8Array(base64) {
-  const binString = atob(base64);
-  return new Uint8Array(binString.split("").map((c) => c.charCodeAt(0)));
-}
 
 function isEmpty(v) {
   if (v === null || v === undefined) {
@@ -72,7 +68,7 @@ export function convertDecryptedValue(
     case SOPSDataType.Boolean:
       return value.toLowerCase() === 'true';
     case SOPSDataType.Bytes:
-      return utf8ToBytes(value);
+      return Uint8Array.from(atob(value), c => c.charCodeAt(0));
     case SOPSDataType.Float:
       return Number.parseFloat(value);
     case SOPSDataType.Integer:
@@ -112,9 +108,9 @@ function parse(value: string): ParsedEncryptedData {
   }
 
   try {
-    const data = base64ToUint8Array(matches[1]);
-    const iv = base64ToUint8Array(matches[2]);
-    const tag = base64ToUint8Array(matches[3]);
+    const data = Uint8Array.from(atob(matches[1]), c => c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(matches[2]), c => c.charCodeAt(0));
+    const tag = Uint8Array.from(atob(matches[3]), c => c.charCodeAt(0));
     const rawDatatype = matches[4];
 
     // Validate the datatype is a valid SOPSDataType
