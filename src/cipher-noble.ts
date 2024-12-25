@@ -1,5 +1,4 @@
 import { gcm } from "@noble/ciphers/aes";
-import { bytesToUtf8, utf8ToBytes } from "@noble/ciphers/utils";
 
 // Base type for encrypted data needed by decrypt
 export interface EncryptedData {
@@ -74,9 +73,9 @@ export function decryptSOPS(ciphertext: string, key: Uint8Array, path: string) {
   }
 
   const encryptedValue = parse(ciphertext);
-  const aad = utf8ToBytes(path);
+  const aad = new TextEncoder().encode(path);
   const decrypted = decrypt(encryptedValue, key, aad);
-  const decryptedValue = bytesToUtf8(decrypted);
+  const decryptedValue = new TextDecoder().decode(decrypted);
   return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
 }
 
