@@ -38,7 +38,7 @@ function decrypt(
   return aes.decrypt(combined);
 }
 
-function isEmpty(v) {
+function isEmpty(v: unknown): boolean {
   if (v === null || v === undefined) {
     return true;
   }
