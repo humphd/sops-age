@@ -60,22 +60,27 @@ function decrypt(
   return aes.decrypt(combined);
 }
 
+/** Type representing all possible decrypted values */
+export type DecryptedValue = Uint8Array | boolean | number | string;
+
 /** Converts decrypted string value to appropriate type based on SOPS datatype */
-function convertDecryptedValue(
+export function convertDecryptedValue(
   value: string,
   datatype: SOPSDataType,
-): Uint8Array | boolean | number | string {
+): DecryptedValue {
   switch (datatype) {
-    case SOPSDataType.String:
-      return value;
-    case SOPSDataType.Integer:
-      return Number.parseInt(value, 10);
-    case SOPSDataType.Float:
-      return Number.parseFloat(value);
     case SOPSDataType.Boolean:
-      return value.toLowerCase() === "true";
+      return value.toLowerCase() === 'true';
     case SOPSDataType.Bytes:
       return utf8ToBytes(value);
+    case SOPSDataType.Float:
+      return Number.parseFloat(value);
+    case SOPSDataType.Integer:
+      return Number.parseInt(value, 10);
+    case SOPSDataType.String:
+      return value;
+    default:
+      throw new Error(`Unknown datatype: ${datatype}`);
   }
 }
 
