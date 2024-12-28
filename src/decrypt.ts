@@ -9,13 +9,76 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { createDecipheriv } from "crypto";
 import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
+import toPath from "lodash-es/toPath.js";
 
 import type { SOPS } from "./sops-file.js";
 
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
+import { type EncryptedData, decryptAesGcm } from "./cipher-noble.js";
+
+export type SOPSDataType = "bool" | "bytes" | "float" | "int" | "str";
+
+function isValidSOPSDataType(value: string): value is SOPSDataType {
+  return ["bool", "bytes", "float", "int", "str"].includes(value);
+}
+
+export interface ParsedEncryptedData extends EncryptedData {
+  data: Uint8Array;
+  datatype: SOPSDataType;
+  iv: Uint8Array;
+  tag: Uint8Array;
+}
+
+/** Type representing all possible decrypted values */
+export type DecryptedValue = Uint8Array | boolean | number | string;
+
+/** Converts decrypted string value to appropriate type based on SOPS datatype */
+export function convertDecryptedValue(
+  value: string,
+  datatype: SOPSDataType,
+): DecryptedValue {
+  switch (datatype) {
+    case "bool":
+      return value.toLowerCase() === "true";
+    case "bytes":
+      return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
+    case "float":
+      return Number.parseFloat(value);
+    case "int":
+      return Number.parseInt(value, 10);
+    case "str":
+      return value;
+  }
+}
+
+// Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
+const encRegex = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
+
+function parse(value: string): ParsedEncryptedData {
+  const matches = value.match(encRegex);
+  if (!matches) {
+    throw new Error(`Input string ${value} does not match sops' data format`);
+  }
+
+  try {
+    const data = Uint8Array.from(atob(matches[1]), (c) => c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(matches[2]), (c) => c.charCodeAt(0));
+    const tag = Uint8Array.from(atob(matches[3]), (c) => c.charCodeAt(0));
+    const rawDatatype = matches[4];
+
+    if (!isValidSOPSDataType(rawDatatype)) {
+      throw new Error(`Invalid SOPS data type: ${rawDatatype}`);
+    }
+
+    return { data, datatype: rawDatatype, iv, tag };
+  } catch (err) {
+    throw new Error(
+      `Error decoding base64: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+}
 
 async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
   const pubKey = await getPublicAgeKey(secretKey);
@@ -28,48 +91,59 @@ async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
   return decryptAgeEncryptionKey(recipient.enc, secretKey);
 }
 
-function decryptValue(
-  value: string,
-  decryptionKey: Buffer,
-  aad = "",
-): Buffer | boolean | number | string {
-  const match = value.match(
-    /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]/,
-  );
-  if (!match) {
-    return value;
-  }
-
-  const [, encValue, ivBase64, tagBase64, dataType] = match;
-  if (!encValue || !ivBase64 || !tagBase64) {
-    throw new Error("Invalid ENC format");
-  }
-
-  const iv = Buffer.from(ivBase64, "base64");
-  const tag = Buffer.from(tagBase64, "base64");
-
-  const decipher = createDecipheriv("aes-256-gcm", decryptionKey, iv);
-  decipher.setAuthTag(tag);
-  decipher.setAAD(Buffer.from(aad));
-  const decrypted = decipher.update(encValue, "base64", "utf8");
-
-  switch (dataType) {
-    case "bytes":
-      return Buffer.from(decrypted, "utf8");
-    case "str":
-      return decrypted;
-    case "int":
-      return parseInt(decrypted, 10);
-    case "float":
-      return parseFloat(decrypted);
-    case "bool":
-      return decrypted.toLowerCase() === "true";
-    default:
-      throw new Error(`Unknown type ${dataType}`);
-  }
+/**
+ * Converts a path array to SOPS' Go-style path format.
+ * Filters out numeric indices and joins remaining path segments with colons.
+ * @param path Array of path segments
+ * @returns Path string in format "path:to:key:"
+ */
+function path2gopath(path: string[]): string {
+  return `${path.filter((x) => !/^\d+$/.test(x)).join(":")}:`;
 }
 
-function decryptObject(obj: any, decryptionKey: Buffer) {
+/**
+ * Decrypts SOPS-encrypted string using provided key and additional data.
+ * Handles parsing the SOPS format and converting to the appropriate data type.
+ * @param ciphertext Encrypted string in SOPS format
+ * @param decryptionKey Key used for decryption
+ * @param path Path to the encrypted value for additional authentication
+ * @returns Decrypted value converted to appropriate type
+ */
+function decryptSOPSValue(
+  ciphertext: string,
+  decryptionKey: Uint8Array,
+  path: string[],
+): DecryptedValue {
+  if (!ciphertext) {
+    return "";
+  }
+
+  const encryptedValue = parse(ciphertext);
+  const aad = path2gopath(path);
+  let decrypted: Uint8Array;
+  try {
+    decrypted = decryptAesGcm(
+      encryptedValue,
+      decryptionKey,
+      new TextEncoder().encode(aad),
+    );
+  } catch (err) {
+    throw new Error(
+      `AES-GCM decryption failed at path ${JSON.stringify(path)} for value "${ciphertext}": ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+  }
+
+  const decryptedValue = new TextDecoder().decode(decrypted);
+  return convertDecryptedValue(decryptedValue, encryptedValue.datatype);
+}
+
+function decryptObject(
+  obj: any,
+  decryptionKey: Uint8Array,
+  path: string[] = [],
+) {
   if (typeof obj !== "object" || obj === null) {
     return obj;
   }
@@ -78,24 +152,45 @@ function decryptObject(obj: any, decryptionKey: Buffer) {
   for (const key of Object.keys(obj)) {
     const value = obj[key];
     if (typeof value === "string" && value.startsWith("ENC[AES256_GCM,data:")) {
-      obj[key] = decryptValue(value, decryptionKey);
+      obj[key] = decryptSOPSValue(value, decryptionKey, [...path, key]);
     } else if (typeof value === "object") {
       // Recursively decrypt objects and arrays
-      obj[key] = decryptObject(value, decryptionKey);
+      obj[key] = decryptObject(value, decryptionKey, [...path, key]);
     }
   }
 
   return obj;
 }
 
+/**
+ * Options for decrypting SOPS encrypted data
+ */
 export interface DecryptOptions {
-  // A path to a specific key in the SOPS file to decrypt
+  /**
+   * A path to a specific key in the SOPS file to decrypt.
+   * See https://lodash.com/docs/#get for format
+   */
   keyPath?: string;
-  // The secret key (e.g., AGE key) to use when decrypting. If not specified the
-  // `SOPS_AGE_KEY` env var will be used, if available.
+
+  /**
+   * The secret key (e.g., AGE key) to use when decrypting.
+   * If not specified the `SOPS_AGE_KEY` env var will be used, if available.
+   */
   secretKey?: string;
 }
 
+/**
+ * Decrypts a SOPS-encrypted data structure using an AGE key.
+ *
+ * If a keyPath is provided, only that specific value will be decrypted and returned.
+ * Otherwise, the entire data structure (excluding SOPS metadata) will be decrypted.
+ *
+ * @param sops - The SOPS data structure containing encrypted values and metadata
+ * @param options - Configuration options for decryption
+ * @param options.keyPath - Optional path to decrypt a specific value (lodash path format)
+ * @param options.secretKey - AGE secret key for decryption (falls back to SOPS_AGE_KEY env var)
+ * @returns The decrypted value (if keyPath provided) or object with all values decrypted
+ */
 export async function decrypt(sops: SOPS, options: DecryptOptions) {
   const keyPath = options.keyPath;
   const secretKey = options.secretKey ?? process.env.SOPS_AGE_KEY;
@@ -114,7 +209,7 @@ export async function decrypt(sops: SOPS, options: DecryptOptions) {
       throw new Error(`Unable to get sops value at keyPath="${keyPath}"`);
     }
 
-    return decryptValue(value, decryptionKey);
+    return decryptSOPSValue(value, decryptionKey, toPath(keyPath));
   }
 
   // Otherwise, decrypt the whole thing, stripping out the sops metadata

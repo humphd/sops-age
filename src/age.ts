@@ -8,7 +8,7 @@ export async function getPublicAgeKey(privateAgeKey: string) {
 export async function decryptAgeEncryptionKey(
   encryptedKey: string,
   secretKey: string,
-) {
+): Promise<Uint8Array> {
   const { Decrypter } = await age();
 
   const decrypter = new Decrypter();
@@ -22,8 +22,6 @@ export async function decryptAgeEncryptionKey(
   }
 
   const base64String = matches[1].trim();
-  const encrypted = Buffer.from(base64String, "base64");
-  const decryptionKey = decrypter.decrypt(encrypted, "uint8array");
-
-  return Buffer.from(decryptionKey);
+  const encrypted = Uint8Array.from(atob(base64String), (c) => c.charCodeAt(0));
+  return decrypter.decrypt(encrypted, "uint8array");
 }

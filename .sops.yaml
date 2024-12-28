@@ -1,6 +1,6 @@
 creation_rules:
   # Extra config to only encrypt the actual secret data keys
-  - path_regexp: \.(yml|yaml|json|ini|env)$
+  - path_regexp: \.(yml|yaml|json|env)$
     key_groups:
       - age:
           - age1je6kjhzuhdjy3fqptpttxjh5k8q46vygzlgtpuq3030c947pc5tqz9dqvr # see key.txt

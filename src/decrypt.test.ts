@@ -2,7 +2,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
-import test_json_import from "./data/secret.enc.json" with { type: "json" };
+import test_secret_enc_json from "./data/secret.enc.json" with { type: "json" };
+import test_secret_json from "./data/secret.json" with { type: "json" };
 import { decrypt } from "./decrypt.js";
 import { loadSopsFile, parseSopsJson } from "./sops-file.js";
 
@@ -12,18 +13,7 @@ const AGE_SECRET_KEY =
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const EXPECTED_DECRYPTED_SECRET_JSON = {
-  boolean: true,
-  complex: {
-    array: ["one", "two", "three"],
-    value: "this is a secret",
-  },
-  float: 3.14,
-  int: 7,
-  secret: "this is a secret",
-  string: "string",
-};
-
+//
 const sopsFile = () =>
   loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
 
@@ -43,12 +33,6 @@ describe("loadSopsFile() with explicit type", () => {
   test("env", () => {
     expect(() =>
       loadSopsFile(resolve(__dirname, "./data/secret.enc.env"), "env"),
-    ).not.toThrow();
-  });
-
-  test("ini", () => {
-    expect(() =>
-      loadSopsFile(resolve(__dirname, "./data/secret.enc.ini"), "ini"),
     ).not.toThrow();
   });
 });
@@ -85,14 +69,14 @@ describe("JSON File", () => {
   test("decrypt all values from SOPS JSON file", async () => {
     const sops = await sopsFile();
     const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
-    expect(value).toEqual(EXPECTED_DECRYPTED_SECRET_JSON);
+    expect(value).toEqual(test_secret_json);
   });
 
   test("decrypt import", async () => {
-    const value = await decrypt(parseSopsJson(test_json_import), {
+    const value = await decrypt(parseSopsJson(test_secret_enc_json), {
       secretKey: AGE_SECRET_KEY,
     });
-    expect(value).toEqual(EXPECTED_DECRYPTED_SECRET_JSON);
+    expect(value).toEqual(test_secret_json);
   });
 
   test("decrypt a specific string value from SOPS JSON file", async () => {
@@ -186,31 +170,6 @@ describe("YAML File", () => {
       secretKey: AGE_SECRET_KEY,
     });
     expect(value).toBe(true);
-  });
-});
-
-describe("INI File", () => {
-  const sopsFile = () =>
-    loadSopsFile(resolve(__dirname, "./data/secret.enc.ini"));
-
-  test("decrypt all values from SOPS INI file", async () => {
-    const sops = await sopsFile();
-    const value = await decrypt(sops, { secretKey: AGE_SECRET_KEY });
-    expect(value).toEqual({
-      complex: {
-        string: "string",
-      },
-      secret: "this is a secret",
-    });
-  });
-
-  test("decrypt a specific string value from SOPS INI file", async () => {
-    const sops = await sopsFile();
-    const value = await decrypt(sops, {
-      keyPath: "complex.string",
-      secretKey: AGE_SECRET_KEY,
-    });
-    expect(value).toEqual("string");
   });
 });
 
