@@ -9,26 +9,26 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { toPath } from "lodash-es";
 import cloneDeep from "lodash-es/cloneDeep.js";
 import get from "lodash-es/get.js";
+import toPath from "lodash-es/toPath.js";
 
 import type { SOPS } from "./sops-file.js";
 
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 import { type EncryptedData, decryptAesGcm } from "./cipher-noble.js";
 
-// Valid SOPS data types
-export enum SOPSDataType {
-  Boolean = "bool",
-  Bytes = "bytes",
-  Float = "float",
-  Integer = "int",
-  String = "str",
+export type SOPSDataType = "bool" | "bytes" | "float" | "int" | "str";
+
+function isValidSOPSDataType(value: string): value is SOPSDataType {
+  return ["bool", "bytes", "float", "int", "str"].includes(value);
 }
 
 export interface ParsedEncryptedData extends EncryptedData {
+  data: Uint8Array;
   datatype: SOPSDataType;
+  iv: Uint8Array;
+  tag: Uint8Array;
 }
 
 /** Type representing all possible decrypted values */
@@ -40,24 +40,24 @@ export function convertDecryptedValue(
   datatype: SOPSDataType,
 ): DecryptedValue {
   switch (datatype) {
-    case SOPSDataType.Boolean:
+    case "bool":
       return value.toLowerCase() === "true";
-    case SOPSDataType.Bytes:
+    case "bytes":
       return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
-    case SOPSDataType.Float:
+    case "float":
       return Number.parseFloat(value);
-    case SOPSDataType.Integer:
+    case "int":
       return Number.parseInt(value, 10);
-    case SOPSDataType.String:
+    case "str":
       return value;
   }
 }
 
 // Regular expression for SOPS format from https://github.com/getsops/sops/blob/73fadcf6b49006b0b77ba811f05eae8d740ed511/aes/cipher.go#L54
-const encre = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
+const encRegex = /^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]$/;
 
 function parse(value: string): ParsedEncryptedData {
-  const matches = value.match(encre);
+  const matches = value.match(encRegex);
   if (!matches) {
     throw new Error(`Input string ${value} does not match sops' data format`);
   }
@@ -68,14 +68,11 @@ function parse(value: string): ParsedEncryptedData {
     const tag = Uint8Array.from(atob(matches[3]), (c) => c.charCodeAt(0));
     const rawDatatype = matches[4];
 
-    // Validate the datatype is a valid SOPSDataType
-    if (!Object.values(SOPSDataType).includes(rawDatatype as SOPSDataType)) {
+    if (!isValidSOPSDataType(rawDatatype)) {
       throw new Error(`Invalid SOPS data type: ${rawDatatype}`);
     }
 
-    const datatype = rawDatatype as SOPSDataType;
-
-    return { data, datatype, iv, tag };
+    return { data, datatype: rawDatatype, iv, tag };
   } catch (err) {
     throw new Error(
       `Error decoding base64: ${err instanceof Error ? err.message : String(err)}`,

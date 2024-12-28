@@ -5,7 +5,7 @@
 ## Features
 
 - Supports decryption of SOPS files encrypted with `age`.
-- Compatible with various file formats including `.env`, `.ini`, `.json`, and `.yaml`.
+- Compatible with various file formats including `.env`, `.json`, and `.yaml`.
 - Provides utility functions for loading and decrypting different types of SOPS files or strings.
 - Allows decrypted all or part of a SOPS encrypted data.
 
@@ -28,7 +28,7 @@ import { decrypt, loadSopsFile } from "sops-age";
 
 async function decryptSopsFile(filePath, secretKey) {
   try {
-    // Load the SOPS file (auto-detects file types env, ini, json, yaml from extension)
+    // Load the SOPS file (auto-detects file types env, json, yaml from extension)
     const sopsData = await loadSopsFile(filePath);
 
     // Decrypt the data using the secret key
@@ -50,7 +50,6 @@ decryptSopsFile(filePath, secretKey);
 `sops-age` supports the following file types:
 
 - `.env`
-- `.ini`
 - `.json`
 - `.yaml` / `.yml`
 
@@ -60,7 +59,7 @@ The library automatically detects the file type based on the file extension. You
 
 ### `loadSopsFile(path, [sopsFileType])`
 
-Loads a SOPS file from the specified path. The `sopsFileType` parameter is optional and can be used to manually specify the file type (`env`, `ini`, `json`, `yaml`) when it can't be inferred from the file extension.
+Loads a SOPS file from the specified path. The `sopsFileType` parameter is optional and can be used to manually specify the file type (`env`, `json`, `yaml`) when it can't be inferred from the file extension.
 
 ### `decrypt(sops, { secretKey: "AGE-key...", [keyPath] })`
 
@@ -78,7 +77,6 @@ const DB_URI = await decrypt(sopsData, { secretKey, keyPath: "DB_URI" });
 ### Parsing Functions
 
 - `parseSopsEnv(envString)`
-- `parseSopsIni(iniString)`
 - `parseSopsJson(json)`
 - `parseSopsYaml(yamlString)`
 

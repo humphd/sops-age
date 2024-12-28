@@ -138,8 +138,6 @@ secrets.yaml
 secret.yml
 secrets.yaml
 secrets.json
-secret.ini
-secrets.ini
 secret.env
 secrets.env
 .aider*

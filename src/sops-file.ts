@@ -9,7 +9,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import dotenv from "dotenv";
-import ini from "ini";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { parse as parseYaml } from "yaml";
@@ -37,7 +36,7 @@ export type SOPS = z.infer<typeof SopsSchema>;
 
 export async function loadSopsFile(
   path: string,
-  sopsFileType?: "env" | "ini" | "json" | "yaml",
+  sopsFileType?: "env" | "json" | "yaml",
 ) {
   const data = await readFile(path, "utf-8");
 
@@ -46,8 +45,6 @@ export async function loadSopsFile(
     switch (sopsFileType) {
       case "env":
         return parseSopsEnv(data);
-      case "ini":
-        return parseSopsIni(data);
       case "json":
         return parseSopsJson(data);
       case "yaml":
@@ -62,8 +59,6 @@ export async function loadSopsFile(
   switch (ext) {
     case ".env":
       return parseSopsEnv(data);
-    case ".ini":
-      return parseSopsIni(data);
     case ".json":
       return parseSopsJson(data);
     case ".yaml":
@@ -71,7 +66,7 @@ export async function loadSopsFile(
       return parseSopsYaml(data);
     default:
       throw new Error(
-        `Unable to pick SOPS parser for extension ${ext}. Use: .env, .ini, .json, .yaml`,
+        `Unable to pick SOPS parser for extension ${ext}. Use: .env, .json, .yaml`,
       );
   }
 }
@@ -122,17 +117,6 @@ function constructSopsObject(
       version: sops.version,
     },
   });
-}
-
-export function parseSopsIni(iniString: string) {
-  const parsedIni = ini.parse(iniString);
-  const { sops } = parsedIni;
-  if (!sops) {
-    throw new Error("Missing sops section in .ini");
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  return constructSopsObject(parsedIni, sops);
 }
 
 export function parseSopsEnv(envString: string) {
