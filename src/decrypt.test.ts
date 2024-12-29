@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 import test_secret_enc_json from "./data/secret.enc.json" with { type: "json" };
 import test_secret_json from "./data/secret.json" with { type: "json" };
 import { decrypt } from "./decrypt.js";
-import { loadSopsFile, parseSopsJson } from "./sops-file.js";
+import { loadSopsFile, parseSops } from "./sops-file.js";
 
 // See ../../key.txt
 const AGE_SECRET_KEY =
@@ -13,7 +13,7 @@ const AGE_SECRET_KEY =
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-//
+
 const sopsFile = () =>
   loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
 
@@ -73,9 +73,12 @@ describe("JSON File", () => {
   });
 
   test("decrypt import", async () => {
-    const value = await decrypt(parseSopsJson(test_secret_enc_json), {
-      secretKey: AGE_SECRET_KEY,
-    });
+    const value = await decrypt(
+      await parseSops(JSON.stringify(test_secret_enc_json), "json"),
+      {
+        secretKey: AGE_SECRET_KEY,
+      },
+    );
     expect(value).toEqual(test_secret_json);
   });
 
