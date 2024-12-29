@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import test_secret_enc_json from "./data/secret.enc.json" with { type: "json" };
-import test_secret_json from "./data/secret.json" with { type: "json" };
-import { decrypt } from "./decrypt.js";
-import { parseSops, type SOPS } from "./sops-file.js";
+import test_secret_enc_json from "../data/secret.enc.json" with { type: "json" };
+import test_secret_json from "../data/secret.json" with { type: "json" };
+import { decrypt } from "../../src/decrypt.js";
+import { parseSops, type SOPS } from "../../src/sops-file.js";
 
 // See ../../key.txt
 const AGE_SECRET_KEY =

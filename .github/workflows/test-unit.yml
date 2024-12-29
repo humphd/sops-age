@@ -1,0 +1,15 @@
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+      - run: pnpm run test:unit
+
+name: Test - Unit
+
+on:
+  pull_request: ~
+  push:
+    branches:
+      - main

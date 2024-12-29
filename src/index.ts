@@ -8,6 +8,8 @@ import {
 } from "./sops-file.js";
 import { decrypt, type DecryptOptions } from "./decrypt.js";
 
+export { SopsInput, SopsFileType };
+
 /**
  * Options for decrypting SOPS data, extending base decrypt options with an optional file type.
  */

@@ -2,30 +2,13 @@ import dotenv from "dotenv";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
-// Extend the global scope for Deno and Bun
-declare global {
-  var Deno:
-    | {
-        readTextFile(path: string): Promise<string>;
-      }
-    | undefined;
-  var Bun:
-    | {
-        file(path: string): {
-          text(): Promise<string>;
-          stream(): ReadableStream<Uint8Array>;
-          size: number;
-          type: string;
-        };
-      }
-    | undefined;
-}
+import { loadFromFile } from "./runtime.js";
 
 export type SopsInput =
   | string
   | File
   | Blob
-  | ArrayBuffer
+  | ArrayBufferLike
   | Uint8Array
   | Buffer
   | ReadableStream<Uint8Array>;
@@ -178,26 +161,6 @@ export async function parseSops(input: SopsInput, sopsFileType?: SopsFileType) {
       cause: err,
     });
   }
-}
-
-async function loadFromFile(path: string): Promise<string> {
-  // Node.js
-  if (typeof process !== "undefined" && process.versions?.node) {
-    const fs = await import("fs/promises");
-    return fs.readFile(path, "utf-8");
-  }
-
-  // Deno
-  if (globalThis.Deno) {
-    return globalThis.Deno.readTextFile(path);
-  }
-
-  // Bun
-  if (globalThis.Bun) {
-    return globalThis.Bun.file(path).text();
-  }
-
-  throw new Error(`Unable to determine method to load file "${path}"`);
 }
 
 export async function loadSopsFile(

@@ -2,10 +2,10 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test, vi } from "vitest";
 
-import test_secret_enc_json from "./data/secret.enc.json" with { type: "json" };
-import test_secret_json from "./data/secret.json" with { type: "json" };
+import test_secret_enc_json from "../data/secret.enc.json" with { type: "json" };
+import test_secret_json from "../data/secret.json" with { type: "json" };
 
-import { decryptSops } from "./index.js";
+import { decryptSops } from "../../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,7 +25,7 @@ describe("decryptSops()", () => {
 
   test("with path option", async () => {
     const value = await decryptSops({
-      path: resolve(__dirname, "./data/secret.enc.json"),
+      path: resolve(__dirname, "../data/secret.enc.json"),
       secretKey: AGE_SECRET_KEY,
     });
     expect(value).toEqual(test_secret_json);
@@ -48,7 +48,7 @@ describe("decryptSops()", () => {
 
   test("with keyPath", async () => {
     const value = await decryptSops({
-      path: resolve(__dirname, "./data/secret.enc.json"),
+      path: resolve(__dirname, "../data/secret.enc.json"),
       secretKey: AGE_SECRET_KEY,
       keyPath: "complex.value",
     });

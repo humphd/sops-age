@@ -1,15 +1,11 @@
-// import cloneDeep from "lodash-es/cloneDeep.js";
-// import get from "lodash-es/get.js";
-// import toPath from "lodash-es/toPath.js";
-
 import cloneDeep from "lodash/cloneDeep.js";
 import get from "lodash/get.js";
 import toPath from "lodash/toPath.js";
 
 import type { SOPS } from "./sops-file.js";
-
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 import { type EncryptedData, decryptAesGcm } from "./cipher-noble.js";
+import { getEnvVar } from "./runtime.js";
 
 export type SOPSDataType = "bool" | "bytes" | "float" | "int" | "str";
 
@@ -185,7 +181,7 @@ export interface DecryptOptions {
  */
 export async function decrypt(sops: SOPS, options: DecryptOptions) {
   const keyPath = options.keyPath;
-  const secretKey = options.secretKey ?? process.env.SOPS_AGE_KEY;
+  const secretKey = options.secretKey ?? getEnvVar("SOPS_AGE_KEY");
   if (!secretKey) {
     throw new Error(
       "A secretKey is required to decrypt. Set one on options or via the SOPS_AGE_KEY environment variable",
