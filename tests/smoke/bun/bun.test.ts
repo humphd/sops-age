@@ -1,3 +1,4 @@
+// @ts-ignore - need to build before this will exist
 import { decryptSops } from "../../../dist/index.js";
 import { describe, test, expect, beforeAll } from "bun:test";
 

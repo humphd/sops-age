@@ -1,3 +1,4 @@
+// @ts-ignore - need to build before this will exist
 import { decryptSops } from "../../../dist/index.js";
 // @ts-ignore
 import { assertEquals } from "https://deno.land/std/assert/mod.ts";
