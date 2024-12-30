@@ -141,3 +141,4 @@ secrets.json
 secret.env
 secrets.env
 .aider*
+deno.lock

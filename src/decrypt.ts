@@ -1,22 +1,11 @@
-// TODO: sort out the various TypeScript/ESLint rules I've disabled...
-
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable eslint-comments/no-duplicate-disable */
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-import cloneDeep from "lodash-es/cloneDeep.js";
-import get from "lodash-es/get.js";
-import toPath from "lodash-es/toPath.js";
+import cloneDeep from "lodash/cloneDeep.js";
+import get from "lodash/get.js";
+import toPath from "lodash/toPath.js";
 
 import type { SOPS } from "./sops-file.js";
-
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 import { type EncryptedData, decryptAesGcm } from "./cipher-noble.js";
+import { getEnvVar } from "./runtime.js";
 
 export type SOPSDataType = "bool" | "bytes" | "float" | "int" | "str";
 
@@ -35,7 +24,7 @@ export interface ParsedEncryptedData extends EncryptedData {
 export type DecryptedValue = Uint8Array | boolean | number | string;
 
 /** Converts decrypted string value to appropriate type based on SOPS datatype */
-export function convertDecryptedValue(
+function convertDecryptedValue(
   value: string,
   datatype: SOPSDataType,
 ): DecryptedValue {
@@ -148,7 +137,6 @@ function decryptObject(
     return obj;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   for (const key of Object.keys(obj)) {
     const value = obj[key];
     if (typeof value === "string" && value.startsWith("ENC[AES256_GCM,data:")) {
@@ -193,7 +181,7 @@ export interface DecryptOptions {
  */
 export async function decrypt(sops: SOPS, options: DecryptOptions) {
   const keyPath = options.keyPath;
-  const secretKey = options.secretKey ?? process.env.SOPS_AGE_KEY;
+  const secretKey = options.secretKey ?? getEnvVar("SOPS_AGE_KEY");
   if (!secretKey) {
     throw new Error(
       "A secretKey is required to decrypt. Set one on options or via the SOPS_AGE_KEY environment variable",
@@ -214,7 +202,6 @@ export async function decrypt(sops: SOPS, options: DecryptOptions) {
 
   // Otherwise, decrypt the whole thing, stripping out the sops metadata
   // and only use the rest of the keys
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sops: _, ...data } = sops;
   // Deep clone the object so we can decrypt in-place:
   const cloned = cloneDeep(data);

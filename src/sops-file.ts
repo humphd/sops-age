@@ -1,18 +1,50 @@
-// TODO: sort out the various TypeScript/ESLint rules I've disabled...
-
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable eslint-comments/no-duplicate-disable */
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import dotenv from "dotenv";
-import { readFile } from "node:fs/promises";
-import { extname } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
+
+import { loadFromFile } from "./runtime.js";
+
+export type SopsInput =
+  | string
+  | File
+  | Blob
+  | ArrayBufferLike
+  | Uint8Array
+  | Buffer
+  | ReadableStream<Uint8Array>;
+
+export type SopsFileType = "env" | "json" | "yaml";
+
+/**
+ * Type guard function to check if a value is a valid SopsInput type
+ *
+ * @param value - Any value to check
+ * @returns true if value is a valid SopsInput type, false otherwise
+ */
+export function isSopsInput(value: unknown): value is SopsInput {
+  if (!value) {
+    return false;
+  }
+
+  // Check for string
+  if (typeof value === "string") {
+    return true;
+  }
+
+  // Check for object types
+  if (typeof value === "object") {
+    return (
+      value instanceof File ||
+      value instanceof Blob ||
+      value instanceof ArrayBuffer ||
+      value instanceof Uint8Array ||
+      value instanceof Buffer ||
+      value instanceof ReadableStream
+    );
+  }
+
+  return false;
+}
 
 const AgeRecipientSchema = z.object({
   enc: z.string(),
@@ -34,49 +66,125 @@ const SopsSchema = z
 
 export type SOPS = z.infer<typeof SopsSchema>;
 
-export async function loadSopsFile(
-  path: string,
-  sopsFileType?: "env" | "json" | "yaml",
-) {
-  const data = await readFile(path, "utf-8");
-
-  // Parse the data using the given explicit type, if present.
-  if (sopsFileType) {
-    switch (sopsFileType) {
-      case "env":
-        return parseSopsEnv(data);
-      case "json":
-        return parseSopsJson(data);
-      case "yaml":
-        return parseSopsYaml(data);
-      default:
-        throw new Error(`Unknown SOPS file type: ${String(sopsFileType)}`);
-    }
+async function inputToString(input: SopsInput): Promise<string> {
+  if (typeof input === "string") {
+    return input;
   }
 
-  // Otherwise, infer type from extension, if possible
-  const ext = extname(path);
-  switch (ext) {
-    case ".env":
-      return parseSopsEnv(data);
-    case ".json":
-      return parseSopsJson(data);
-    case ".yaml":
-    case ".yml":
+  // File, Blob handling
+  if (input instanceof File || input instanceof Blob) {
+    return await input.text();
+  }
+
+  // ArrayBuffer, Uint8Array handling
+  if (input instanceof ArrayBuffer || input instanceof Uint8Array) {
+    return new TextDecoder().decode(input);
+  }
+
+  // Buffer handling (for Node.js)
+  if (
+    typeof globalThis.Buffer !== "undefined" &&
+    globalThis.Buffer.isBuffer(input)
+  ) {
+    return input.toString("utf-8");
+  }
+
+  // ReadableStream handling
+  if (input instanceof ReadableStream) {
+    const reader = input.getReader();
+    const chunks: Uint8Array[] = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      chunks.push(value);
+    }
+
+    const concatenated = new Uint8Array(
+      chunks.reduce((acc, chunk) => acc + chunk.length, 0),
+    );
+    let offset = 0;
+    for (const chunk of chunks) {
+      concatenated.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    return new TextDecoder().decode(concatenated);
+  }
+
+  throw new Error(`Unsupported input type: ${typeof input}`);
+}
+
+function autoDetectAndParseSops(data: string): SOPS {
+  // Try JSON first
+  try {
+    return parseSopsJson(data);
+  } catch {
+    // Not JSON, try YAML
+    try {
       return parseSopsYaml(data);
-    default:
-      throw new Error(
-        `Unable to pick SOPS parser for extension ${ext}. Use: .env, .json, .yaml`,
-      );
+    } catch {
+      // Try ENV
+      try {
+        return parseSopsEnv(data);
+      } catch {
+        throw new Error(
+          "Could not auto-detect file type. Please specify: env, json, or yaml",
+        );
+      }
+    }
   }
 }
 
-export function parseSopsYaml(yamlString: string) {
+export async function parseSops(input: SopsInput, sopsFileType?: SopsFileType) {
+  try {
+    const data = await inputToString(input);
+
+    if (sopsFileType) {
+      switch (sopsFileType) {
+        case "env":
+          return parseSopsEnv(data);
+        case "json":
+          return parseSopsJson(data);
+        case "yaml":
+          return parseSopsYaml(data);
+        default:
+          throw new Error(`Unknown SOPS file type: ${String(sopsFileType)}`);
+      }
+    }
+
+    return autoDetectAndParseSops(data);
+  } catch (err) {
+    throw new Error(`Failed to load SOPS file: ${(err as Error).message}`, {
+      cause: err,
+    });
+  }
+}
+
+export async function loadSopsFile(
+  path: string,
+  sopsFileType?: SopsFileType,
+): Promise<SOPS> {
+  try {
+    const content = await loadFromFile(path);
+    return await parseSops(content, sopsFileType);
+  } catch (err) {
+    throw new Error(
+      `Failed to load SOPS file '${path}': ${(err as Error).message}`,
+      {
+        cause: err,
+      },
+    );
+  }
+}
+
+function parseSopsYaml(yamlString: string) {
   return SopsSchema.parse(parseYaml(yamlString));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export function parseSopsJson(json: any | string) {
+function parseSopsJson(json: any | string) {
   return SopsSchema.parse(typeof json === "string" ? JSON.parse(json) : json);
 }
 
@@ -90,7 +198,6 @@ function rebuildAgeArray(
       if (match) {
         const index = parseInt(match[1], 10);
         const type = match[2];
-        // eslint-disable-next-line logical-assignment-operators
         acc[index] = acc[index] || {};
         acc[index][type === "map_enc" ? "enc" : "recipient"] = sops[key];
       }
@@ -119,7 +226,7 @@ function constructSopsObject(
   });
 }
 
-export function parseSopsEnv(envString: string) {
+function parseSopsEnv(envString: string) {
   const parsedEnv = dotenv.parse(envString);
   const sopsKeys = Object.keys(parsedEnv).filter((key) =>
     key.startsWith("sops_"),
@@ -149,6 +256,5 @@ export function parseSopsEnv(envString: string) {
     {},
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return constructSopsObject(nonSopsEnv, sops);
 }

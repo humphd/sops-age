@@ -2,10 +2,10 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
-import test_secret_enc_json from "./data/secret.enc.json" with { type: "json" };
-import test_secret_json from "./data/secret.json" with { type: "json" };
-import { decrypt } from "./decrypt.js";
-import { loadSopsFile, parseSopsJson } from "./sops-file.js";
+import test_secret_enc_json from "../data/secret.enc.json" with { type: "json" };
+import test_secret_json from "../data/secret.json" with { type: "json" };
+import { decrypt } from "../../src/decrypt.js";
+import { loadSopsFile, parseSops } from "../../src/sops-file.js";
 
 // See ../../key.txt
 const AGE_SECRET_KEY =
@@ -13,26 +13,26 @@ const AGE_SECRET_KEY =
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-//
+
 const sopsFile = () =>
-  loadSopsFile(resolve(__dirname, "./data/secret.enc.json"));
+  loadSopsFile(resolve(__dirname, "../data/secret.enc.json"));
 
 describe("loadSopsFile() with explicit type", () => {
   test("json", () => {
     expect(() =>
-      loadSopsFile(resolve(__dirname, "./data/secret.enc.json"), "json"),
+      loadSopsFile(resolve(__dirname, "../data/secret.enc.json"), "json"),
     ).not.toThrow();
   });
 
   test("yaml", () => {
     expect(() =>
-      loadSopsFile(resolve(__dirname, "./data/secret.enc.yaml"), "yaml"),
+      loadSopsFile(resolve(__dirname, "../data/secret.enc.yaml"), "yaml"),
     ).not.toThrow();
   });
 
   test("env", () => {
     expect(() =>
-      loadSopsFile(resolve(__dirname, "./data/secret.enc.env"), "env"),
+      loadSopsFile(resolve(__dirname, "../data/secret.enc.env"), "env"),
     ).not.toThrow();
   });
 });
@@ -73,9 +73,12 @@ describe("JSON File", () => {
   });
 
   test("decrypt import", async () => {
-    const value = await decrypt(parseSopsJson(test_secret_enc_json), {
-      secretKey: AGE_SECRET_KEY,
-    });
+    const value = await decrypt(
+      await parseSops(JSON.stringify(test_secret_enc_json), "json"),
+      {
+        secretKey: AGE_SECRET_KEY,
+      },
+    );
     expect(value).toEqual(test_secret_json);
   });
 
@@ -118,7 +121,7 @@ describe("JSON File", () => {
 
 describe("YAML File", () => {
   const sopsFile = () =>
-    loadSopsFile(resolve(__dirname, "./data/secret.enc.yaml"));
+    loadSopsFile(resolve(__dirname, "../data/secret.enc.yaml"));
 
   test("decrypt all values from SOPS YAML file", async () => {
     const sops = await sopsFile();
@@ -175,7 +178,7 @@ describe("YAML File", () => {
 
 describe("ENV File", () => {
   const sopsFile = () =>
-    loadSopsFile(resolve(__dirname, "./data/secret.enc.env"));
+    loadSopsFile(resolve(__dirname, "../data/secret.enc.env"));
 
   test("decrypt all values from SOPS ENV file", async () => {
     const sops = await sopsFile();
