@@ -9,6 +9,8 @@ export default defineConfig([
     clean: true,
     outDir: "dist",
     sourcemap: true,
+    treeshake: true,
+    metafile: true,
   },
   // CJS build - bundle ESM-only deps
   {
@@ -19,6 +21,9 @@ export default defineConfig([
     minify: true,
     outDir: "dist",
     sourcemap: true,
+    metafile: true,
+    splitting: true,
+    treeshake: true,
   },
   // IIFE build
   {
@@ -28,5 +33,7 @@ export default defineConfig([
     minify: true,
     outDir: "dist",
     sourcemap: true,
+    treeshake: true,
+    metafile: true,
   },
 ]);

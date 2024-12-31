@@ -142,3 +142,4 @@ secret.env
 secrets.env
 .aider*
 deno.lock
+stats-*.html
