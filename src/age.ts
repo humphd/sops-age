@@ -1,17 +1,14 @@
-import age from "age-encryption";
+import * as age from "age-encryption";
 
 export async function getPublicAgeKey(privateAgeKey: string) {
-  const { identityToRecipient } = await age();
-  return identityToRecipient(privateAgeKey);
+  return age.identityToRecipient(privateAgeKey);
 }
 
 export async function decryptAgeEncryptionKey(
   encryptedKey: string,
   secretKey: string,
 ): Promise<Uint8Array> {
-  const { Decrypter } = await age();
-
-  const decrypter = new Decrypter();
+  const decrypter = new age.Decrypter();
   decrypter.addIdentity(secretKey);
 
   const regex =
