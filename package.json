@@ -1,7 +1,7 @@
 {
   "name": "sops-age",
-  "version": "2.0.0",
-  "description": "Node.js sops age decryption",
+  "version": "3.0.0",
+  "description": "sops age decryption for JavaScript",
   "repository": "humphd/sops-age",
   "license": "MIT",
   "author": {
@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@noble/ciphers": "^1.1.3",
-    "age-encryption": "^0.1.5",
+    "age-encryption": "^0.2.0-rc.0",
     "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
     "yaml": "^2.6.1",
