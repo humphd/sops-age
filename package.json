@@ -1,7 +1,7 @@
 {
   "name": "sops-age",
   "version": "3.0.0",
-  "description": "sops age decryption",
+  "description": "sops age decryption for JavaScript",
   "repository": "humphd/sops-age",
   "license": "MIT",
   "author": {
