@@ -23,6 +23,11 @@
     "README.md"
   ],
   "scripts": {
+    "preanalyze": "pnpm run build",
+    "analyze": "pnpm run-s analyze:*",
+    "analyze:esm": "esbuild-visualizer --metadata dist/metafile-esm.json --filename stats-esm.html",
+    "analyze:cjs": "esbuild-visualizer --metadata dist/metafile-cjs.json --filename stats-cjs.html",
+    "analyze:iife": "esbuild-visualizer --metadata dist/metafile-iife.json --filename stats-iife.html",
     "build": "tsup",
     "format": "prettier . --write --cache",
     "format-check": "prettier . --check --cache",
@@ -61,6 +66,7 @@
     "bun-types": "^1.1.42",
     "console-fail-test": "^0.2.3",
     "deno": "^2.1.4",
+    "esbuild-visualizer": "^0.7.0",
     "husky": "^9.1.7",
     "knip": "^5.41.1",
     "lint-staged": "^15.3.0",
