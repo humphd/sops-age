@@ -15,7 +15,7 @@ const AGE_SECRET_KEY =
   "AGE-SECRET-KEY-1QXRVEJH9S4NQU0FPD6V79ESZQ8S6PXH3L8V40EVPTHFH6KNKD4DQ7SKC4P";
 
 describe("decryptSops()", () => {
-  test.only("with valid object input", async () => {
+  test("with valid object input", async () => {
     const value = await decryptSops(test_secret_enc_json);
     expect(value).toEqual(test_secret_json);
   });
