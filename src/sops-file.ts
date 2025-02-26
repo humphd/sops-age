@@ -5,6 +5,7 @@ import { z } from "zod";
 import { loadFromFile } from "./runtime.js";
 
 export type SopsInput =
+  | object
   | string
   | File
   | Blob
@@ -31,7 +32,22 @@ export function isSopsInput(value: unknown): value is SopsInput {
     return true;
   }
 
-  // Check for object types
+  // Check for an already parsed, sops-like object
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "sops" in value &&
+    typeof (value as any).sops === "object" &&
+    (value as any).sops !== null &&
+    Array.isArray((value as any).sops.age) &&
+    typeof (value as any).sops.mac === "string" &&
+    typeof (value as any).sops.lastmodified === "string" &&
+    typeof (value as any).sops.version === "string"
+  ) {
+    return true;
+  }
+
+  // Look for other types we can handle
   if (typeof value === "object") {
     return (
       value instanceof File ||
@@ -112,6 +128,10 @@ async function inputToString(input: SopsInput): Promise<string> {
     }
 
     return new TextDecoder().decode(concatenated);
+  }
+
+  if (typeof input === "object") {
+    return JSON.stringify(input);
   }
 
   throw new Error(`Unsupported input type: ${typeof input}`);

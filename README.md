@@ -171,6 +171,38 @@ const decrypted = await decryptSops({
 });
 ```
 
+### `decryptSops(sopsObject, options?)`
+
+Decrypts SOPS-encrypted content directly from a pre-parsed SOPS object.
+
+```js
+const sopsObject = {
+  secret:
+    "ENC[AES256_GCM,data:trrpgezXug4Dq9T/inwkMA==,iv:glPwxoY2UuHO91vlJRaqYtFkPY1VsWvkJtfkEKZJdns=,tag:v7DbOYl7C5gdQRdW6BVoLw==,type:str]",
+  sops: {
+    kms: null,
+    gcp_kms: null,
+    azure_kv: null,
+    hc_vault: null,
+    age: [
+      {
+        recipient:
+          "age1je6kjhzuhdjy3fqptpttxjh5k8q46vygzlgtpuq3030c947pc5tqz9dqvr",
+        enc: "-----BEGIN AGE ENCRYPTED FILE-----\nYWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBsYVh6WTdzNnArL1E1RVVw\nZEoyU2hqZVZuVjR3bFJ2dlZaOGQ4VUVla1hVCll3MDZrY1VZeWtPNzVPUGNFWjBK\ncDZLVFZheU4wK0hBOTNmRFcwUkE4OFkKLS0tIHl3Y0x5Sk9lVDRCQkR3QzNzRWY4\ncFNPWFZqdEtyUmFhL3pLOHJvNlhuTTAKNLKVIFujPtmpYo/Oycit0JbcfPVN2TN5\nG9emUjK1XVOwkNda0olhEt4KAjSBV7dYt8luOL8VQeR33PadX7RK3A==\n-----END AGE ENCRYPTED FILE-----\n",
+      },
+    ],
+    lastmodified: "2024-12-25T09:03:17Z",
+    mac: "ENC[AES256_GCM,data:pjgkspXlmS1uFtR5yRZXcXISNEOk2/L4lN1zJoo49kgbABun2EwpZ2wfhPUDEDKn7kfmKuSOl4xQ/adUHVJh6bOHyQTf9lfH2BekCy828BIODowzk2tR5uiin8bB5q5VQfNJIaYEn3EWpGaOupEaNTZOyi5ML+WXB8s6w53Wg0w=,iv:wKEh9xSZ5RtsNdlRcEpYnbLKmUV6yitneJQhVt7qBSM=,tag:CmfHyYRe2/GVEexW5A8OWg==,type:str]",
+    pgp: null,
+    unencrypted_suffix: "_unencrypted",
+    version: "3.9.2",
+  },
+};
+
+// Assumes SOPS_AGE_KEY is set in the env
+const decrypted = await decryptSops(sopsObject);
+```
+
 ### Options
 
 The `decryptSops` function accepts the following options:

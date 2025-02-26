@@ -131,6 +131,12 @@ export async function decryptSops(
     return decrypt(sopsData, decryptOptions);
   }
 
+  // Case 3. An bare input object with no options (AGE key must be set in the env)
+  if (inputOrOptions && isSopsInput(inputOrOptions)) {
+    const sopsData = await parseSops(inputOrOptions);
+    return decrypt(sopsData, {});
+  }
+
   throw new Error(
     "Invalid options: when no input given, you must specify one of `path` or `url`",
   );
