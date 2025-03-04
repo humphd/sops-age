@@ -1,3 +1,4 @@
+// @ts-ignore - need to build before this will exist
 import { decryptSops } from "../../../dist/index.js";
 import { describe, test, expect } from "vitest";
 import original from "../../data/secret.json" assert { type: "json" };

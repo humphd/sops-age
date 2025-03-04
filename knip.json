@@ -1,7 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "entry": ["src/index.ts!"],
-  "ignoreDependencies": ["deno", "bun"],
+  "ignoreDependencies": [
+    "deno",
+    "bun",
+    "miniflare",
+    "@cloudflare/workers-types"
+  ],
   "ignoreExportsUsedInFile": { "interface": true, "type": true },
   "project": ["src/**/*.ts!"]
 }
