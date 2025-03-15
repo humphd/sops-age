@@ -14,5 +14,11 @@
     "target": "ES2022",
     "types": ["bun-types", "@types/deno"]
   },
-  "include": ["src", "tsup.config.ts", "tests/unit/**/*.ts", "tests/smoke/**/*"]
+  "include": [
+    "src",
+    "tsup.config.ts",
+    "vitest.config.ts",
+    "tests/unit/**/*.ts",
+    "tests/smoke/**/*"
+  ]
 }
