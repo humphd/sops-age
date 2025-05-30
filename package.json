@@ -10,9 +10,9 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "main": "./dist/index.cjs",
@@ -52,9 +52,12 @@
   },
   "dependencies": {
     "@noble/ciphers": "^1.2.1",
+    "@noble/hashes": "^1.8.0",
+    "@scure/base": "^1.2.5",
     "age-encryption": "^0.2.3",
     "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
+    "sshpk": "^1.18.0",
     "yaml": "^2.7.0",
     "zod": "^3.24.2"
   },
@@ -64,10 +67,10 @@
     "@types/deno": "^2.2.0",
     "@types/lodash": "^4.17.15",
     "@types/node": "^22.13.5",
+    "@types/sshpk": "^1.17.4",
     "@vitest/coverage-v8": "^3.0.6",
     "bun": "^1.2.3",
     "bun-types": "^1.2.3",
-    "console-fail-test": "^0.5.0",
     "deno": "^2.2.1",
     "esbuild-visualizer": "^0.7.0",
     "husky": "^9.1.7",

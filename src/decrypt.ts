@@ -6,6 +6,7 @@ import type { SOPS } from "./sops-file.js";
 import { decryptAgeEncryptionKey, getPublicAgeKey } from "./age.js";
 import { type EncryptedData, decryptAesGcm } from "./cipher-noble.js";
 import { getEnvVar } from "./runtime.js";
+import { findAllAgeKeys } from "./age-key.js";
 
 export type SOPSDataType = "bool" | "bytes" | "float" | "int" | "str";
 
@@ -69,15 +70,41 @@ function parse(value: string): ParsedEncryptedData {
   }
 }
 
-async function getSopsEncryptionKeyForRecipient(sops: SOPS, secretKey: string) {
-  const pubKey = await getPublicAgeKey(secretKey);
+/**
+ * Attempts to find a matching age recipient and decrypt the encryption key
+ * using all available secret keys until one works.
+ */
+async function getSopsEncryptionKey(
+  sops: SOPS,
+  secretKeys: string[],
+): Promise<Uint8Array> {
+  const errors: string[] = [];
 
-  const recipient = sops.sops.age.find((config) => config.recipient === pubKey);
-  if (!recipient) {
-    throw new Error("no matching recipient found in age config");
+  for (const secretKey of secretKeys) {
+    try {
+      const pubKey = await getPublicAgeKey(secretKey);
+      const recipient = sops.sops.age.find(
+        (config) => config.recipient === pubKey,
+      );
+
+      if (!recipient) {
+        errors.push(`No matching recipient found for key: ${pubKey}`);
+        continue;
+      }
+
+      return await decryptAgeEncryptionKey(recipient.enc, secretKey);
+    } catch (error) {
+      errors.push(
+        `Failed to decrypt with key ${secretKey.substring(0, 20)}...: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
-  return decryptAgeEncryptionKey(recipient.enc, secretKey);
+  throw new Error(
+    `Failed to decrypt with any available age keys. Errors:\n${errors.join("\n")}`,
+  );
 }
 
 /**
@@ -160,9 +187,8 @@ export interface DecryptOptions {
    */
   keyPath?: string;
 
-  /**
-   * The secret key (e.g., AGE key) to use when decrypting.
-   * If not specified the `SOPS_AGE_KEY` env var will be used, if available.
+  /* The secret key (e.g., AGE key) to use when decrypting.
+   * If not specified, all available keys will be discovered and tried.
    */
   secretKey?: string;
 }
@@ -170,8 +196,13 @@ export interface DecryptOptions {
 /**
  * Decrypts a SOPS-encrypted data structure using an AGE key.
  *
- * If a keyPath is provided, only that specific value will be decrypted and returned.
- * Otherwise, the entire data structure (excluding SOPS metadata) will be decrypted.
+ * If no secretKey is provided, all available age keys will be discovered
+ * using the same logic as SOPS:
+ * - SSH keys (converted to age format)
+ * - SOPS_AGE_KEY environment variable
+ * - SOPS_AGE_KEY_FILE environment variable
+ * - SOPS_AGE_KEY_CMD environment variable
+ * - Default config file (~/.config/sops/age/keys.txt)
  *
  * @param sops - The SOPS data structure containing encrypted values and metadata
  * @param options - Configuration options for decryption
@@ -180,15 +211,35 @@ export interface DecryptOptions {
  * @returns The decrypted value (if keyPath provided) or object with all values decrypted
  */
 export async function decrypt(sops: SOPS, options: DecryptOptions) {
-  const keyPath = options.keyPath;
-  const secretKey = options.secretKey ?? getEnvVar("SOPS_AGE_KEY");
-  if (!secretKey) {
-    throw new Error(
-      "A secretKey is required to decrypt. Set one on options or via the SOPS_AGE_KEY environment variable",
-    );
+  const { keyPath, secretKey } = options;
+
+  // Determine which secret keys to use
+  let secretKeys: string[];
+  if (secretKey) {
+    // Use the explicitly provided key
+    secretKeys = [secretKey];
+  } else {
+    // Discover all available keys using SOPS logic
+    try {
+      secretKeys = await findAllAgeKeys();
+    } catch (error) {
+      throw new Error(
+        `Failed to find age keys: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
+    if (secretKeys.length === 0) {
+      throw new Error(
+        "No age keys found. Provide a secretKey option or set age keys via " +
+          "environment variables, SSH keys, or the default sops keys.txt config file.",
+      );
+    }
   }
 
-  const decryptionKey = await getSopsEncryptionKeyForRecipient(sops, secretKey);
+  // Try to decrypt the SOPS encryption key with available secret keys
+  const decryptionKey = await getSopsEncryptionKey(sops, secretKeys);
 
   // If we have a path to a specific key, only decrypt that
   if (keyPath) {

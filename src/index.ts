@@ -141,3 +141,9 @@ export async function decryptSops(
     "Invalid options: when no input given, you must specify one of `path` or `url`",
   );
 }
+
+/**
+ * Useful utilities for discovering age keys and converting SSH keys to age keys
+ */
+export { findAllAgeKeys } from "./age-key.js";
+export { sshKeyToAge, sshKeyFileToAge } from "./ssh-to-age.js";
