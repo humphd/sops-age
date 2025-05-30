@@ -63,9 +63,6 @@ importers:
       bun-types:
         specifier: ^1.2.3
         version: 1.2.3
-      console-fail-test:
-        specifier: ^0.5.0
-        version: 0.5.0
       deno:
         specifier: ^2.2.1
         version: 2.2.1
@@ -1421,10 +1418,6 @@ packages:
   consola@3.4.0:
     resolution: {integrity: sha512-EiPU8G6dQG0GFHNR8ljnZFki/8a+cQwEQ+7wpxdChl02Q8HXlwEZWD5lqAF8vC2sEC3Tehr8hy7vErz88LHyUA==}
     engines: {node: ^14.18.0 || >=16.10.0}
-
-  console-fail-test@0.5.0:
-    resolution: {integrity: sha512-nghkQcJ9DJMYtdN1L/ZNu1GvnLMo38DTneWX23+WbIdvjuVkbcshGFxgIG5LbI9j/th4dgwUc0Hiwtq85VWb/Q==}
-    engines: {node: '>=18'}
 
   conventional-changelog-angular@8.0.0:
     resolution: {integrity: sha512-CLf+zr6St0wIxos4bmaKHRXWAcsCXrJU6F4VdNDrGRK3B8LDLKoX3zuMV5GhtbGkVR/LohZ6MT6im43vZLSjmA==}
@@ -4618,8 +4611,6 @@ snapshots:
       xdg-basedir: 5.1.0
 
   consola@3.4.0: {}
-
-  console-fail-test@0.5.0: {}
 
   conventional-changelog-angular@8.0.0:
     dependencies:
