@@ -215,12 +215,8 @@ ZXN0aW5nAQIDBAUG
   });
 
   test("should handle empty SSH key content", () => {
-    expect(() => sshKeyToAge("", "test-empty")).toThrow(
-      "SSH key should not be empty",
-    );
-    expect(() => sshKeyToAge("   \n  ", "test-whitespace")).toThrow(
-      "SSH key should not be empty",
-    );
+    expect(sshKeyToAge("", "test-empty")).toBe(null);
+    expect(sshKeyToAge("   \n  ", "test-whitespace")).toBe(null);
   });
 });
 

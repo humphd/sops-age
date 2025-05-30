@@ -219,28 +219,22 @@ export async function decrypt(sops: SOPS, options: DecryptOptions) {
     // Use the explicitly provided key
     secretKeys = [secretKey];
   } else {
-    // Check for SOPS_AGE_KEY environment variable first (for backwards compatibility)
-    const envKey = getEnvVar("SOPS_AGE_KEY");
-    if (envKey) {
-      secretKeys = [envKey];
-    } else {
-      // Discover all available keys using SOPS logic
-      try {
-        secretKeys = await findAllAgeKeys();
-      } catch (error) {
-        throw new Error(
-          `Failed to find age keys: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
+    // Discover all available keys using SOPS logic
+    try {
+      secretKeys = await findAllAgeKeys();
+    } catch (error) {
+      throw new Error(
+        `Failed to find age keys: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
 
-      if (secretKeys.length === 0) {
-        throw new Error(
-          "No age keys found. Provide a secretKey option or set up age keys " +
-            "via environment variables, SSH keys, or the default config file.",
-        );
-      }
+    if (secretKeys.length === 0) {
+      throw new Error(
+        "No age keys found. Provide a secretKey option or set age keys via " +
+          "environment variables, SSH keys, or the default sops keys.txt config file.",
+      );
     }
   }
 

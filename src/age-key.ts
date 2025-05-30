@@ -24,9 +24,8 @@ function parseX25519KeysFromString(
     if (trimmedLine === "" || trimmedLine.startsWith("#")) {
       continue;
     }
-    if (
-      trimmedLine.toUpperCase().startsWith(X25519_PRIVATE_KEY_HRP.toUpperCase())
-    ) {
+
+    if (trimmedLine.toUpperCase().startsWith(X25519_PRIVATE_KEY_HRP)) {
       keyStrings.push(trimmedLine);
     } else if (trimmedLine.startsWith("AGE-PLUGIN-")) {
       console.warn(
@@ -44,7 +43,6 @@ function parseX25519KeysFromString(
   return keyStrings;
 }
 
-// getUserConfigDir function (remains the same as your original)
 async function getUserConfigDir(): Promise<string> {
   if (platform() === "darwin") {
     const xdgConfigHome = process.env.XDG_CONFIG_HOME;
@@ -77,7 +75,6 @@ async function getUserConfigDir(): Promise<string> {
  * - Looks in the sops/age/keys.txt config dir for age keys.
  */
 export async function findAllAgeKeys(): Promise<string[]> {
-  // Track if any potential key source is identified
   let foundKeySource = false;
 
   // 1. SSH Keys (converted to X25519 Bech32 strings)

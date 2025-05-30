@@ -143,7 +143,7 @@ export async function decryptSops(
 }
 
 /**
- * Useful utilities for finding and converting to age keys
+ * Useful utilities for discovering age keys and converting SSH keys to age keys
  */
 export { findAllAgeKeys } from "./age-key.js";
 export { sshKeyToAge, sshKeyFileToAge } from "./ssh-to-age.js";

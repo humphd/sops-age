@@ -57,9 +57,9 @@ export function sshKeyToAge(
   filePathForErrorMsg: string,
 ): string | null {
   try {
+    // Empty file? Nothing to parse.
     if (keyFileContent.trim() === "") {
-      // TOOD: throw or return null?
-      throw new Error("SSH key should not be empty");
+      return null;
     }
 
     const sshPk = sshpk.parsePrivateKey(keyFileContent, "auto", {
