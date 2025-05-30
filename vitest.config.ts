@@ -15,6 +15,5 @@ export default defineConfig({
     },
     include: ["tests/unit/**/*.test.ts"],
     exclude: ["dist", "node_modules"],
-    setupFiles: ["console-fail-test/setup"],
   },
 });

@@ -1,5 +1,7 @@
 import * as age from "age-encryption";
 
+export const X25519_PRIVATE_KEY_HRP = "AGE-SECRET-KEY-1";
+
 export async function getPublicAgeKey(privateAgeKey: string) {
   return age.identityToRecipient(privateAgeKey);
 }
