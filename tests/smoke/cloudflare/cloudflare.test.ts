@@ -1,7 +1,7 @@
 // @ts-ignore - need to build before this will exist
 import { decryptSops, sshKeyToAge } from "../../../dist/index.js";
 import { describe, test, expect } from "vitest";
-import original from "../../data/secret.json" assert { type: "json" };
+import original from "../../data/secret.json" with { type: "json" };
 
 // See ../../key.txt
 const AGE_SECRET_KEY =

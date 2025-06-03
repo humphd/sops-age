@@ -2,10 +2,10 @@
 import { decryptSops, sshKeyToAge } from "../../../dist/index.js";
 // @ts-ignore
 import {
-  assert,
   assertEquals,
   assertMatch,
   assertExists,
+  // @ts-ignore
 } from "https://deno.land/std/assert/mod.ts";
 
 // See ../../key.txt
