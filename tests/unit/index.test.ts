@@ -47,7 +47,7 @@ describe("decryptSops()", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       text: () => Promise.resolve(JSON.stringify(test_secret_enc_json)),
-    });
+    }) as unknown as typeof fetch;
 
     const value = await decryptSops({
       url: "https://example.com/config.enc.json",
