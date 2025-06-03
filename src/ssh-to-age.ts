@@ -54,7 +54,7 @@ function convertRsaPublicKeyToX25519PrivateKey(
  */
 export function sshKeyToAge(
   keyFileContent: string,
-  filePathForErrorMsg: string,
+  filePathForErrorMsg: string = "unknown key source",
 ): string | null {
   try {
     // Empty file? Nothing to parse.

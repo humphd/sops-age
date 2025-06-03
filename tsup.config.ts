@@ -5,12 +5,13 @@ export default defineConfig([
     entry: ["src/index.ts"],
     format: ["esm"],
     dts: true,
-    minify: true,
+    minify: false,
     clean: true,
     outDir: "dist",
     sourcemap: true,
     treeshake: true,
     metafile: true,
+    removeNodeProtocol: false,
   },
   // CJS build - bundle ESM-only deps
   {
@@ -18,7 +19,7 @@ export default defineConfig([
     format: ["cjs"],
     // The age-encryption lib is ESM-only, so pull it in for CJS
     noExternal: ["age-encryption"],
-    minify: true,
+    minify: false,
     outDir: "dist",
     sourcemap: true,
     metafile: true,
