@@ -1,6 +1,6 @@
 import { sha256, sha512 } from "@noble/hashes/sha2";
 import { bech32 } from "@scure/base";
-import * as sshpk from "sshpk";
+import sshpk from "sshpk";
 import { readFile } from "node:fs/promises";
 
 function clampX25519PrivateKey(key: Uint8Array): void {
